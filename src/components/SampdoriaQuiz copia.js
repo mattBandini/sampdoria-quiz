@@ -1805,71 +1805,27 @@ const SampdoriaQuiz = () => {
 
     const ModeSelection = ({ onSelectMode }) => {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center">
-                    Seleziona la Modalità di Gioco
-                </h1>
-                <div className="flex flex-col md:flex-row gap-6">
-                    {/* Modalità Singleplayer */}
-                    <div 
-                        className="relative w-80 h-96 rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 border-4 border-blue-600"
-                        onClick={() => onSelectMode('singleplayer')}
-                    >
-                        {/* Immagine di sfondo */}
-                        <img 
-                            src="/images/modes/singleplayer.png" 
-                            alt="Singleplayer" 
-                            className="absolute inset-0 w-full h-full object-cover"
-                        />
-                        {/* Overlay con GRADIENTE Nero */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                        {/* Leggera sfumatura blu per dare un tocco di colore */}
-                        <div className="absolute inset-0 bg-blue-900 bg-opacity-60"></div>
-                        {/* Contenuto */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white text-center">
-                            <h2 className="text-3xl font-bold mb-4">Gioca contro il Computer</h2>
-                            <p className="text-lg mb-6">
-                                Sfida un'intelligenza artificiale nella battaglia di statistiche blucerchiate!
-                            </p>
-                            <button className="px-6 py-2 bg-white text-blue-900 font-semibold rounded-lg shadow-md hover:bg-gray-300">
-                                Seleziona
-                            </button>
-                        </div>
-                    </div>
-    
-                    {/* Modalità Multiplayer */}
-                    <div 
-                        className="relative w-80 h-96 rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 border-4 border-green-600"
-                        onClick={() => onSelectMode('multiplayer')}
-                    >
-                        {/* Immagine di sfondo */}
-                        <img 
-                            src="/images/modes/multiplayer.png" 
-                            alt="Multiplayer" 
-                            className="absolute inset-0 w-full h-full object-cover"
-                        />
-                        {/* Overlay con GRADIENTE Nero */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                        {/* Leggera sfumatura verde per dare un tocco di colore */}
-                        <div className="absolute inset-0 bg-green-900 bg-opacity-60"></div>
-                        {/* Contenuto */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white text-center">
-                            <h2 className="text-3xl font-bold mb-4">Gioca contro un Amico</h2>
-                            <p className="text-lg mb-6">
-                                Metti alla prova la tua conoscenza della Sampdoria sfidando un altro giocatore!
-                            </p>
-                            <button className="px-6 py-2 bg-white text-green-900 font-semibold rounded-lg shadow-md hover:bg-gray-300">
-                                Seleziona
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <Card className="w-full max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="text-center">Scegli la modalità di gioco</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center space-y-4">
+              <button
+                onClick={() => onSelectMode('singleplayer')}
+                className="w-full py-2 px-4 bg-blue-900 text-white rounded-lg hover:bg-blue-800"
+              >
+                Gioca contro il Computer
+              </button>
+              <button
+                onClick={() => onSelectMode('multiplayer')}
+                className="w-full py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-500"
+              >
+                Gioca contro un Amico
+              </button>
+            </CardContent>
+          </Card>
         );
     };
-    
-    
-    
 
     return (
         <div className="min-h-screen bg-gray-100">
