@@ -2,925 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { LogOut, Info } from 'lucide-react';
+import { useFirebaseData } from '@/hooks/useFirebaseData';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Search } from 'lucide-react';
 
-// Database giocatori
-const players = [
-    // Attaccanti
-    {
-        name: "Fabio Quagliarella",
-        position: "Attaccante", 
-        years: "2016-2023",
-        image: "images/players/quagliarella.jpg"
-    },
-    {
-        name: "Manolo Gabbiadini",
-        position: "Attaccante",
-        years: "2013-2015, 2019-2023", 
-        image: "images/players/gabbiadini.jpg"
-    },
-    {
-        name: "Francesco Caputo",
-        position: "Attaccante",
-        years: "2021-2023",
-        image: "images/players/caputo.jpg"
-    },
-    {
-        name: "Antonio Candreva",
-        position: "Attaccante",
-        years: "2021-2023",
-        image: "images/players/candreva.jpg"
-    },
-    {
-        name: "Sam Lammers",
-        position: "Attaccante",
-        years: "2022-2023",
-        image: "images/players/lammers.jpg"
-    },
-    {
-        name: "Federico Bonazzoli",
-        position: "Attaccante",
-        years: "2015-2022",
-        image: "images/players/bonazzoli.jpg"
-    },
-    {
-        name: "Duván Zapata",
-        position: "Attaccante",
-        years: "2017-2018",
-        image: "images/players/zapata.jpg"
-    },
-    {
-        name: "Luis Muriel",
-        position: "Attaccante",
-        years: "2015-2017",
-        image: "images/players/muriel.jpg"
-    },
-    {
-        name: "Patrik Schick",
-        position: "Attaccante",
-        years: "2016-2017",
-        image: "images/players/schick.jpg"
-    },
-    {
-        name: "Eder",
-        position: "Attaccante",
-        years: "2012-2016",
-        image: "images/players/eder.jpg"
-    },
-    {
-        name: "Stefano Okaka",
-        position: "Attaccante",
-        years: "2014-2015",
-        image: "images/players/okaka.jpg"
-    },
- 
-    // Centrocampisti
-    {
-        name: "Tomás Rincón",
-        position: "Centrocampista",
-        years: "2022-2023",
-        image: "images/players/rincon.jpg"
-    },
-    {
-        name: "Abdelhamid Sabiri",
-        position: "Centrocampista",
-        years: "2022-2023",
-        image: "images/players/sabiri.jpg"
-    },
-    {
-        name: "Gonzalo Villar",
-        position: "Centrocampista",
-        years: "2022-2023",
-        image: "images/players/villar.jpg"
-    },
-    {
-        name: "Morten Thorsby",
-        position: "Centrocampista",
-        years: "2019-2022",
-        image: "images/players/thorsby.jpg"
-    },
-    {
-        name: "Albin Ekdal",
-        position: "Centrocampista",
-        years: "2015-2022",
-        image: "images/players/ekdal.jpg"
-    },
-    {
-        name: "Lucas Torreira",
-        position: "Centrocampista",
-        years: "2016-2018",
-        image: "images/players/torreira.jpg"
-    },
-    {
-        name: "Dennis Praet",
-        position: "Centrocampista",
-        years: "2016-2019",
-        image: "images/players/praet.jpg"
-    },
-    {
-        name: "Karol Linetty",
-        position: "Centrocampista",
-        years: "2016-2020",
-        image: "images/players/linetty.jpg"
-    },
-    {
-        name: "Roberto Soriano",
-        position: "Centrocampista",
-        years: "2015-2019",
-        image: "images/players/soriano.jpg"
-    },
-    {
-        name: "Gastón Ramírez",
-        position: "Centrocampista",
-        years: "2017-2021",
-        image: "images/players/ramirez.jpg"
-    },
- 
-    // Difensori
-    {
-        name: "Omar Colley",
-        position: "Difensore",
-        years: "2018-2023",
-        image: "images/players/colley.jpg"
-    },
-    {
-        name: "Bartosz Bereszyński",
-        position: "Difensore",
-        years: "2017-2023",
-        image: "images/players/bereszynski.jpg"
-    },
-    {
-        name: "Alex Ferrari",
-        position: "Difensore",
-        years: "2019-2023",
-        image: "images/players/ferrari.jpg"
-    },
-    {
-        name: "Tommaso Augello",
-        position: "Difensore",
-        years: "2019-2023",
-        image: "images/players/augello.jpg"
-    },
-    {
-        name: "Maya Yoshida",
-        position: "Difensore",
-        years: "2020-2022",
-        image: "images/players/yoshida.jpg"
-    },
-    {
-        name: "Joachim Andersen",
-        position: "Difensore",
-        years: "2017-2019",
-        image: "images/players/andersen.jpg"
-    },
-    {
-        name: "Milan Škriniar",
-        position: "Difensore",
-        years: "2016-2017",
-        image: "images/players/skriniar.jpg"
-    },
-    {
-        name: "Matías Silvestre",
-        position: "Difensore",
-        years: "2013-2016",
-        image: "images/players/silvestre.jpg"
-    },
-    {
-        name: "Vasco Regini",
-        position: "Difensore",
-        years: "2013-2021",
-        image: "images/players/regini.jpg"
-    },
- 
-    // Portieri
-    {
-        name: "Emil Audero",
-        position: "Portiere",
-        years: "2018-2023",
-        image: "images/players/audero.jpg"
-    },
-    {
-        name: "Wladimiro Falcone",
-        position: "Portiere",
-        years: "2021-2023",
-        image: "images/players/falcone.jpg"
-    },
-    {
-        name: "Christian Puggioni",
-        position: "Portiere",
-        years: "2017-2019",
-        image: "images/players/puggioni.jpg"
-    },
-    {
-        name: "Emiliano Viviano",
-        position: "Portiere",
-        years: "2014-2018",
-        image: "images/players/viviano.jpg"
-    },
-
-    { name: "Roberto Mancini", 
-      position: "Attaccante", 
-      years: "1982-1997", 
-      image: "images/players/mancini.jpg" },
-
-    { name: "Gianluca Vialli", position: "Attaccante", years: "1984-1992", image: "images/players/vialli.jpg" },
-    { name: "Attila Lombardo", position: "Centrocampista", years: "1989-1995, 2001-2002", image: "images/players/lombardo.jpg" },
-    { name: "Ruud Gullit", position: "Centrocampista", years: "1993-1994", image: "images/players/gullit.jpg" },
-    { name: "Gianluca Pagliuca", position: "Portiere", years: "1987-1994", image: "images/players/pagliuca.jpg" },
-    { name: "Pietro Vierchowod", position: "Difensore", years: "1983-1995", image: "images/players/vierchowod.jpg" },
-    { name: "Toninho Cerezo", position: "Centrocampista", years: "1986-1992", image: "images/players/cerezo.jpg" },
-    { name: "Moreno Mannini", position: "Difensore", years: "1984-1999", image: "images/players/mannini.jpg" },
-    { name: "Fausto Pari", position: "Centrocampista", years: "1986-1995", image: "images/players/pari.jpg" },
-    { name: "Vladimir Jugović", position: "Centrocampista", years: "1992-1995", image: "images/players/jugovic.jpg" },
-    { name: "Enrico Chiesa", position: "Attaccante", years: "1995-1996, 2001-2003", image: "images/players/chiesa.jpg" },
-    { name: "Marco Lanna", position: "Difensore", years: "1987-1993, 2002-2004", image: "images/players/lanna.jpg" },
-    { name: "Vincenzo Montella", position: "Attaccante", years: "1996-1999", image: "images/players/montella.jpg" },
-    { name: "David Platt", position: "Centrocampista", years: "1993-1995", image: "images/players/platt.jpg" },
-    { name: "Siniša Mihajlović", position: "Difensore", years: "1994-1998", image: "images/players/mihajlovic.jpg" },
-    { name: "Francesco Flachi", position: "Attaccante", years: "1999-2007", image: "images/players/flachi.jpg" },
-    { name: "Sergio Volpi", position: "Centrocampista", years: "2000-2007", image: "images/players/volpi.jpg" },
-    { name: "Angelo Palombo", position: "Centrocampista", years: "2002-2016", image: "images/players/palombo.jpg" },
-    { name: "Daniele Mannini", position: "Centrocampista", years: "2007-2011", image: "images/players/d_mannini.jpg" },
-    { name: "Gennaro Delvecchio", position: "Centrocampista", years: "2005-2009", image: "images/players/delvecchio.jpg" }
-];
-
-// Database statistiche giocatori
-const playerStats = {
-    "Fabio Quagliarella": {
-        presenze: 236,
-        gol: 105,
-        assist: 38,
-        tiriPartita: 3.8,
-        golTesta: 15,
-        golPunizione: 7
-    },
-    "Manolo Gabbiadini": {
-        presenze: 182,
-        gol: 58,
-        assist: 24,
-        tiriPartita: 2.9,
-        golTesta: 8,
-        golUltimi10Min: 9
-    },
-    "Antonio Candreva": {
-        presenze: 89,
-        gol: 19,
-        assist: 28,
-        tiriPartita: 2.4,
-        cross: 242,
-        assistPiazzati: 11
-    },
-    "Francesco Caputo": {
-        presenze: 76,
-        gol: 27,
-        assist: 12,
-        tiriPartita: 2.6,
-        golTesta: 5,
-        golArea: 22
-    },
-    "Emil Audero": {
-        presenze: 168,
-        cleanSheet: 44,
-        parate: 498,
-        rigoriParati: 8,
-        minutiImbattuto: 511,
-        uscite: 324
-    },
-    "Omar Colley": {
-        presenze: 143,
-        tackle: 246,
-        intercetti: 312,
-        duelliVinti: "72%",
-        passaggiRiusciti: "86%",
-        respinte: 486
-    },
-    "Albin Ekdal": {
-        presenze: 154,
-        gol: 8,
-        assist: 14,
-        passaggiRiusciti: "89%",
-        recuperi: 267,
-        tackle: 234
-    },
-
-    "Francesco Caputo": {
-        presenze: 76,
-        gol: 27,
-        assist: 12,
-        tiriPartita: 2.6,
-        golTesta: 5,
-        golArea: 22
-    },
-    "Antonio Candreva": {
-        presenze: 89,
-        gol: 19,
-        assist: 28,
-        tiriPartita: 2.4,
-        cross: 242,
-        assistPiazzati: 11
-    },
-    "Sam Lammers": {
-        presenze: 33,
-        gol: 8,
-        assist: 3,
-        tiriPartita: 1.8,
-        golTesta: 2,
-        golArea: 6
-    },
-    "Federico Bonazzoli": {
-        presenze: 112,
-        gol: 19,
-        assist: 7,
-        tiriPartita: 1.5,
-        golTesta: 4,
-        golUltimi10Min: 5
-    },
-    "Duván Zapata": {
-        presenze: 37,
-        gol: 11,
-        assist: 5,
-        tiriPartita: 2.7,
-        golTesta: 4,
-        golArea: 9
-    },
-    "Luis Muriel": {
-        presenze: 79,
-        gol: 21,
-        assist: 15,
-        tiriPartita: 2.3,
-        dribbling: 87,
-        golArea: 17
-    },
-    "Patrik Schick": {
-        presenze: 32,
-        gol: 11,
-        assist: 3,
-        tiriPartita: 2.1,
-        golTesta: 2,
-        golArea: 9
-    },
-    "Eder": {
-        presenze: 135,
-        gol: 49,
-        assist: 18,
-        tiriPartita: 2.5,
-        golPunizione: 4,
-        golUltimi10Min: 7
-    },
-    "Stefano Okaka": {
-        presenze: 37,
-        gol: 4,
-        assist: 2,
-        tiriPartita: 1.2,
-        golTesta: 2,
-        duelliVinti: "58%"
-    },
-    "Tomás Rincón": {
-        presenze: 33,
-        gol: 1,
-        assist: 2,
-        passaggiRiusciti: "87%",
-        tackle: 78,
-        intercetti: 45
-    },
-    "Abdelhamid Sabiri": {
-        presenze: 23,
-        gol: 3,
-        assist: 2,
-        passaggiRiusciti: "82%",
-        tiriPartita: 1.7,
-        dribbling: 34
-    },
-    "Gonzalo Villar": {
-        presenze: 15,
-        gol: 0,
-        assist: 1,
-        passaggiRiusciti: "91%",
-        tackle: 23,
-        intercetti: 19
-    },
-    "Morten Thorsby": {
-        presenze: 74,
-        gol: 7,
-        assist: 3,
-        duelliVinti: "67%",
-        recuperi: 198,
-        kmPartita: 11.8
-    },
-    "Lucas Torreira": {
-        presenze: 71,
-        gol: 4,
-        assist: 1,
-        passaggiRiusciti: "89%",
-        tackle: 187,
-        intercetti: 124
-    },
-    "Dennis Praet": {
-        presenze: 98,
-        gol: 4,
-        assist: 6,
-        passaggiRiusciti: "86%",
-        dribbling: 112,
-        kmPartita: 10.7
-    },
-    "Karol Linetty": {
-        presenze: 132,
-        gol: 11,
-        assist: 13,
-        passaggiRiusciti: "85%",
-        tackle: 201,
-        recuperi: 267
-    },
-    "Roberto Soriano": {
-        presenze: 104,
-        gol: 17,
-        assist: 8,
-        tiriPartita: 1.8,
-        passaggiRiusciti: "84%",
-        kmPartita: 11.2
-    },
-    "Gastón Ramírez": {
-        presenze: 95,
-        gol: 17,
-        assist: 11,
-        golPunizione: 8,
-        dribbling: 132,
-        passaggiChiave: 87
-    },
-    "Omar Colley": {
-        presenze: 143,
-        gol: 3,
-        tackle: 246,
-        intercetti: 312,
-        duelliVinti: "72%",
-        respinte: 486
-    },
-    "Bartosz Bereszyński": {
-        presenze: 145,
-        gol: 1,
-        assist: 7,
-        tackle: 312,
-        cross: 187,
-        duelliVinti: "64%"
-    },
-    "Alex Ferrari": {
-        presenze: 78,
-        gol: 1,
-        tackle: 134,
-        intercetti: 156,
-        duelliVinti: "68%",
-        respinte: 267
-    },
-    "Tommaso Augello": {
-        presenze: 102,
-        gol: 2,
-        assist: 9,
-        cross: 201,
-        tackle: 178,
-        intercetti: 123
-    },
-    "Maya Yoshida": {
-        presenze: 72,
-        gol: 3,
-        tackle: 156,
-        intercetti: 187,
-        duelliVinti: "70%",
-        respinte: 312
-    },
-    "Joachim Andersen": {
-        presenze: 42,
-        gol: 1,
-        tackle: 87,
-        intercetti: 112,
-        duelliVinti: "69%",
-        respinte: 178
-    },
-    "Milan Škriniar": {
-        presenze: 35,
-        gol: 2,
-        tackle: 76,
-        intercetti: 98,
-        duelliVinti: "73%",
-        respinte: 156
-    },
-    "Matías Silvestre": {
-        presenze: 78,
-        gol: 3,
-        tackle: 167,
-        intercetti: 201,
-        duelliVinti: "66%",
-        respinte: 289
-    },
-    "Vasco Regini": {
-        presenze: 107,
-        gol: 2,
-        assist: 3,
-        tackle: 234,
-        intercetti: 178,
-        duelliVinti: "62%"
-    },
-    "Emil Audero": {
-        presenze: 168,
-        cleanSheet: 44,
-        parate: 498,
-        rigoriParati: 8,
-        minutiImbattuto: 511,
-        uscite: 324
-    },
-    "Wladimiro Falcone": {
-        presenze: 27,
-        cleanSheet: 7,
-        parate: 89,
-        rigoriParati: 1,
-        minutiImbattuto: 203,
-        uscite: 67
-    },
-    "Christian Puggioni": {
-        presenze: 18,
-        cleanSheet: 4,
-        parate: 54,
-        rigoriParati: 0,
-        minutiImbattuto: 156,
-        uscite: 43
-    },
-    "Emiliano Viviano": {
-        presenze: 115,
-        cleanSheet: 31,
-        parate: 342,
-        rigoriParati: 5,
-        minutiImbattuto: 412,
-        uscite: 278
-    },
-
-    "Roberto Mancini": {
-        presenze: 424,
-        gol: 132,
-        assist: 87,
-        tiriPartita: 2.7,
-        golPunizione: 23,
-        passaggiChiave: 412
-    },
-    "Gianluca Vialli": {
-        presenze: 223,
-        gol: 85,
-        assist: 34,
-        tiriPartita: 3.2,
-        golTesta: 18,
-        duelliVinti: "64%"
-    },
-    "Attila Lombardo": {
-        presenze: 98,
-        gol: 23,
-        assist: 31,
-        dribbling: 187,
-        cross: 245,
-        kmPartita: 11.3
-    },
-    "Ruud Gullit": {
-        presenze: 85,
-        gol: 31,
-        assist: 22,
-        tiriPartita: 2.8,
-        duelliVinti: "71%",
-        passaggiChiave: 98
-    },
-    "Gianluca Pagliuca": {
-        presenze: 198,
-        cleanSheet: 67,
-        parate: 623,
-        rigoriParati: 12,
-        minutiImbattuto: 678,
-        uscite: 412
-    },
-    "Pietro Vierchowod": {
-        presenze: 493,
-        gol: 21,
-        tackle: 876,
-        intercetti: 1023,
-        duelliVinti: "76%",
-        respinte: 1567
-    },
-    "Toninho Cerezo": {
-        presenze: 146,
-        gol: 19,
-        assist: 31,
-        passaggiRiusciti: "92%",
-        tackle: 312,
-        intercetti: 278
-    },
-    "Moreno Mannini": {
-        presenze: 377,
-        gol: 11,
-        assist: 23,
-        tackle: 678,
-        intercetti: 534,
-        duelliVinti: "68%"
-    },
-    "Fausto Pari": {
-        presenze: 245,
-        gol: 12,
-        assist: 18,
-        passaggiRiusciti: "86%",
-        tackle: 456,
-        recuperi: 534
-    },
-    "Vladimir Jugović": {
-        presenze: 110,
-        gol: 14,
-        assist: 21,
-        passaggiRiusciti: "88%",
-        tackle: 234,
-        kmPartita: 11.7
-    },
-    "Enrico Chiesa": {
-        presenze: 138,
-        gol: 45,
-        assist: 17,
-        tiriPartita: 2.9,
-        golTesta: 7,
-        dribbling: 167
-    },
-    "Marco Lanna": {
-        presenze: 289,
-        gol: 7,
-        assist: 12,
-        tackle: 578,
-        intercetti: 456,
-        duelliVinti: "65%"
-    },
-    "Vincenzo Montella": {
-        presenze: 83,
-        gol: 54,
-        assist: 13,
-        tiriPartita: 3.1,
-        golTesta: 11,
-        golArea: 46
-    },
-    "David Platt": {
-        presenze: 55,
-        gol: 17,
-        assist: 9,
-        passaggiRiusciti: "87%",
-        tackle: 112,
-        kmPartita: 11.2
-    },
-    "Siniša Mihajlović": {
-        presenze: 110,
-        gol: 12,
-        assist: 18,
-        golPunizione: 9,
-        passaggiRiusciti: "84%",
-        tackle: 189
-    },
-    "Francesco Flachi": {
-        presenze: 280,
-        gol: 110,
-        assist: 45,
-        tiriPartita: 2.6,
-        golPunizione: 11,
-        dribbling: 312
-    },
-    "Sergio Volpi": {
-        presenze: 196,
-        gol: 19,
-        assist: 23,
-        passaggiRiusciti: "89%",
-        tackle: 345,
-        intercetti: 278
-    },
-    "Angelo Palombo": {
-        presenze: 449,
-        gol: 22,
-        assist: 31,
-        passaggiRiusciti: "87%",
-        tackle: 876,
-        recuperi: 1023
-    },
-    "Daniele Mannini": {
-        presenze: 102,
-        gol: 17,
-        assist: 14,
-        tiriPartita: 1.8,
-        cross: 187,
-        dribbling: 156
-    },
-    "Gennaro Delvecchio": {
-        presenze: 142,
-        gol: 11,
-        assist: 16,
-        passaggiRiusciti: "83%",
-        tackle: 267,
-        recuperi: 312
-    }
-};
-
-
-// Database delle domande
-    const questions = [
-        {
-            text: "Chi ha segnato più gol complessivi in campionato?",
-            compare: (a, b) => (playerStats[a.name].gol || 0) - (playerStats[b.name].gol || 0),
-            detail: player => `${playerStats[player.name].gol || 0} gol totali in campionato`
-        },
-        {
-            text: "Chi ha realizzato più assist in una singola stagione?",
-            compare: (a, b) => (playerStats[a.name].assist || 0) - (playerStats[b.name].assist || 0),
-            detail: player => `${playerStats[player.name].assist || 0} assist in totale`
-        },
-        {
-            text: "Chi ha il record di minuti giocati in una stagione?",
-            compare: (a, b) => (playerStats[a.name].minutiGiocati || 0) - (playerStats[b.name].minutiGiocati || 0),
-            detail: player => `${playerStats[player.name].minutiGiocati || 0} minuti giocati in una stagione`
-        },
-        {
-            text: "Chi ha il record di rigori parati?",
-            compare: (a, b) => (playerStats[a.name].rigoriParati || 0) - (playerStats[b.name].rigoriParati || 0),
-            detail: player => `${playerStats[player.name].rigoriParati || 0} rigori parati`
-        },
-        {
-            text: "Chi ha segnato più gol in una singola partita?",
-            compare: (a, b) => (playerStats[a.name].maxGolPartita || 0) - (playerStats[b.name].maxGolPartita || 0),
-            detail: player => `${playerStats[player.name].maxGolPartita || 0} gol in una singola partita`
-        },
-        {
-            text: "Chi ha il record di partite consecutive giocate?",
-            compare: (a, b) => (playerStats[a.name].partiteConsecutive || 0) - (playerStats[b.name].partiteConsecutive || 0),
-            detail: player => `${playerStats[player.name].partiteConsecutive || 0} partite consecutive`
-        },
-        {
-            text: "Chi ha segnato più gol di testa in una stagione?",
-            compare: (a, b) => (playerStats[a.name].golTesta || 0) - (playerStats[b.name].golTesta || 0),
-            detail: player => `${playerStats[player.name].golTesta || 0} gol di testa in una stagione`
-        },
-        {
-            text: "Chi ha il record di km percorsi in una partita?",
-            compare: (a, b) => (playerStats[a.name].kmPartita || 0) - (playerStats[b.name].kmPartita || 0),
-            detail: player => `${playerStats[player.name].kmPartita || 0} km percorsi in una partita`
-        },
-        {
-            text: "Chi ha effettuato più cross in una stagione?",
-            compare: (a, b) => (playerStats[a.name].cross || 0) - (playerStats[b.name].cross || 0),
-            detail: player => `${playerStats[player.name].cross || 0} cross in una stagione`
-        },
-        {
-            text: "Chi ha il record di clean sheet in una stagione?",
-            compare: (a, b) => (playerStats[a.name].cleanSheet || 0) - (playerStats[b.name].cleanSheet || 0),
-            detail: player => `${playerStats[player.name].cleanSheet || 0} clean sheet in una stagione`
-        },
-        {
-            text: "Chi ha segnato più gol su punizione?",
-            compare: (a, b) => (playerStats[a.name].golPunizione || 0) - (playerStats[b.name].golPunizione || 0),
-            detail: player => `${playerStats[player.name].golPunizione || 0} gol su punizione`
-        },
-        {
-            text: "Chi ha il record di tackle vincenti in una stagione?",
-            compare: (a, b) => (playerStats[a.name].tackle || 0) - (playerStats[b.name].tackle || 0),
-            detail: player => `${playerStats[player.name].tackle || 0} tackle vincenti in una stagione`
-        },
-        {
-            text: "Chi ha la percentuale più alta di duelli aerei vinti?",
-            compare: (a, b) => parseFloat(playerStats[a.name].duelliVinti || 0) - parseFloat(playerStats[b.name].duelliVinti || 0),
-            detail: player => `${playerStats[player.name].duelliVinti || 0}% di duelli aerei vinti`
-        },
-        {
-            text: "Chi ha fatto più recuperi palla in una stagione?",
-            compare: (a, b) => (playerStats[a.name].recuperi || 0) - (playerStats[b.name].recuperi || 0),
-            detail: player => `${playerStats[player.name].recuperi || 0} recuperi in una stagione`
-        },
-        {
-            text: "Chi ha la media più alta di tiri per partita?",
-            compare: (a, b) => (playerStats[a.name].tiriPartita || 0) - (playerStats[b.name].tiriPartita || 0),
-            detail: player => `${playerStats[player.name].tiriPartita || 0} tiri per partita`
-        },
-        {
-            text: "Chi ha segnato più gol nei minuti finali (80'+)?",
-            compare: (a, b) => (playerStats[a.name].golUltimi10Min || 0) - (playerStats[b.name].golUltimi10Min || 0),
-            detail: player => `${playerStats[player.name].golUltimi10Min || 0} gol negli ultimi 10 minuti`
-        },
-        {
-            text: "Chi ha il record di assist da palla inattiva?",
-            compare: (a, b) => (playerStats[a.name].assistPiazzati || 0) - (playerStats[b.name].assistPiazzati || 0),
-            detail: player => `${playerStats[player.name].assistPiazzati || 0} assist da palla inattiva`
-        },
-        {
-            text: "Chi ha subito più falli in una stagione?",
-            compare: (a, b) => (playerStats[a.name].falliSubiti || 0) - (playerStats[b.name].falliSubiti || 0),
-            detail: player => `${playerStats[player.name].falliSubiti || 0} falli subiti in una stagione`
-        },
-        {
-            text: "Chi ha la percentuale più alta di passaggi riusciti?",
-            compare: (a, b) => parseFloat(playerStats[a.name].passaggiRiusciti || 0) - parseFloat(playerStats[b.name].passaggiRiusciti || 0),
-            detail: player => `${playerStats[player.name].passaggiRiusciti || 0}% di passaggi riusciti`
-        },
-        {
-            text: "Chi ha il record di intercetti in una stagione?",
-            compare: (a, b) => (playerStats[a.name].intercetti || 0) - (playerStats[b.name].intercetti || 0),
-            detail: player => `${playerStats[player.name].intercetti || 0} intercetti in una stagione`
-        },
-        {
-            text: "Chi ha segnato più gol al debutto?",
-            compare: (a, b) => (playerStats[a.name].golDebutto || 0) - (playerStats[b.name].golDebutto || 0),
-            detail: player => `${playerStats[player.name].golDebutto || 0} gol al debutto`
-        },
-        {
-            text: "Chi ha il record di dribbling riusciti in una stagione?",
-            compare: (a, b) => (playerStats[a.name].dribbling || 0) - (playerStats[b.name].dribbling || 0),
-            detail: player => `${playerStats[player.name].dribbling || 0} dribbling riusciti in una stagione`
-        },
-        {
-            text: "Chi ha più presenze totali nel periodo?",
-            compare: (a, b) => (playerStats[a.name].presenze || 0) - (playerStats[b.name].presenze || 0),
-            detail: player => `${playerStats[player.name].presenze || 0} presenze totali`
-        },
-        {
-            text: "Chi ha il record di minuti di imbattibilità?",
-            compare: (a, b) => (playerStats[a.name].minutiImbattuto || 0) - (playerStats[b.name].minutiImbattuto || 0),
-            detail: player => `${playerStats[player.name].minutiImbattuto || 0} minuti di imbattibilità`
-        },
-        {
-            text: "Chi ha più cartellini gialli accumulati?",
-            compare: (a, b) => (playerStats[a.name].cartelliniGialli || 0) - (playerStats[b.name].cartelliniGialli || 0),
-            detail: player => `${playerStats[player.name].cartelliniGialli || 0} cartellini gialli totali`
-        },
-
-    
-            {
-                text: "Chi detiene il record di presenze con la maglia della Sampdoria?",
-                compare: (a, b) => (playerStats[a.name].presenze || 0) - (playerStats[b.name].presenze || 0),
-                detail: player => `${playerStats[player.name].presenze || 0} presenze totali`
-            },
-            {
-                text: "Quale giocatore ha segnato più gol su punizione nella storia della Sampdoria?",
-                compare: (a, b) => (playerStats[a.name].golPunizione || 0) - (playerStats[b.name].golPunizione || 0),
-                detail: player => `${playerStats[player.name].golPunizione || 0} gol su punizione`
-            },
-            {
-                text: "Chi ha vinto più duelli aerei in percentuale?",
-                compare: (a, b) => parseFloat(playerStats[a.name].duelliVinti || 0) - parseFloat(playerStats[b.name].duelliVinti || 0),
-                detail: player => `${playerStats[player.name].duelliVinti || 0}% di duelli aerei vinti`
-            },
-            {
-                text: "Quale portiere ha mantenuto più volte la porta inviolata in una singola stagione?",
-                compare: (a, b) => (playerStats[a.name].cleanSheet || 0) - (playerStats[b.name].cleanSheet || 0),
-                detail: player => `${playerStats[player.name].cleanSheet || 0} clean sheet totali`
-            },
-            {
-                text: "Chi ha la media più alta di km percorsi per partita?",
-                compare: (a, b) => (playerStats[a.name].kmPartita || 0) - (playerStats[b.name].kmPartita || 0),
-                detail: player => `${playerStats[player.name].kmPartita || 0} km per partita`
-            },
-            {
-                text: "Quale giocatore ha la percentuale più alta di passaggi riusciti?",
-                compare: (a, b) => parseFloat(playerStats[a.name].passaggiRiusciti || 0) - parseFloat(playerStats[b.name].passaggiRiusciti || 0),
-                detail: player => `${playerStats[player.name].passaggiRiusciti || 0}% di passaggi riusciti`
-            },
-            {
-                text: "Chi ha segnato più gol in una singola stagione?",
-                compare: (a, b) => (playerStats[a.name].maxGolStagione || 0) - (playerStats[b.name].maxGolStagione || 0),
-                detail: player => `${playerStats[player.name].maxGolStagione || 0} gol in una singola stagione`
-            },
-            {
-                text: "Quale difensore ha segnato più gol nella storia della Sampdoria?",
-                compare: (a, b) => (playerStats[a.name].gol || 0) - (playerStats[b.name].gol || 0),
-                detail: player => `${playerStats[player.name].gol || 0} gol totali`
-            },
-            {
-                text: "Chi detiene il record di assist in una singola stagione?",
-                compare: (a, b) => (playerStats[a.name].maxAssistStagione || 0) - (playerStats[b.name].maxAssistStagione || 0),
-                detail: player => `${playerStats[player.name].maxAssistStagione || 0} assist in una singola stagione`
-            },
-            {
-                text: "Quale giocatore ha effettuato più dribbling riusciti in una stagione?",
-                compare: (a, b) => (playerStats[a.name].dribbling || 0) - (playerStats[b.name].dribbling || 0),
-                detail: player => `${playerStats[player.name].dribbling || 0} dribbling riusciti`
-            },
-            {
-                text: "Chi ha il record di rigori parati nella storia della Sampdoria?",
-                compare: (a, b) => (playerStats[a.name].rigoriParati || 0) - (playerStats[b.name].rigoriParati || 0),
-                detail: player => `${playerStats[player.name].rigoriParati || 0} rigori parati`
-            },
-            {
-                text: "Quale centrocampista ha segnato più gol in una singola stagione?",
-                compare: (a, b) => (playerStats[a.name].maxGolStagione || 0) - (playerStats[b.name].maxGolStagione || 0),
-                detail: player => `${playerStats[player.name].maxGolStagione || 0} gol in una singola stagione`
-            },
-            {
-                text: "Chi ha giocato più stagioni consecutive con la maglia della Sampdoria?",
-                compare: (a, b) => (playerStats[a.name].stagioniConsecutive || 0) - (playerStats[b.name].stagioniConsecutive || 0),
-                detail: player => `${playerStats[player.name].stagioniConsecutive || 0} stagioni consecutive`
-            },
-            {
-                text: "Quale attaccante ha la media gol più alta per partita?",
-                compare: (a, b) => (playerStats[a.name].mediaGol || 0) - (playerStats[b.name].mediaGol || 0),
-                detail: player => `${playerStats[player.name].mediaGol || 0} gol per partita`
-            },
-            {
-                text: "Chi ha effettuato più tackle in una singola stagione?",
-                compare: (a, b) => (playerStats[a.name].tackle || 0) - (playerStats[b.name].tackle || 0),
-                detail: player => `${playerStats[player.name].tackle || 0} tackle in una stagione`
-            }
-        ];
         
 
 
@@ -956,7 +42,8 @@ const Header = ({ playerProfile, onLogout }) => (
     </nav>
 );
 
-const StatsModal = ({ player, isOpen, onClose }) => {
+const StatsModal = ({ player, playerStats, isOpen, onClose }) => {
+    // Retrieve stats directly from playerStats passed as prop
     const stats = playerStats[player?.name];
     
     if (!stats || !player) return null;
@@ -1027,7 +114,6 @@ const StatsModal = ({ player, isOpen, onClose }) => {
         </AlertDialog>
     );
 };
-
 
 const avatars = [
     '/images/avatars/avatar1.png',
@@ -1125,6 +211,8 @@ const ModeSelection = ({ onSelectMode }) => {
   };
 
   const PlayerSelection = ({ 
+    players, // Da Firebase
+    playerStats, // Da Firebase
     selectedPlayers, 
     setSelectedPlayers, 
     setGameState,
@@ -1132,9 +220,18 @@ const ModeSelection = ({ onSelectMode }) => {
     gameMode,
     currentPlayer,
     nextState
-}) => {
+ }) => {
     const [searchTerm, setSearchTerm] = useState('');
-
+ 
+    // Loading state
+    if (!players || !playerStats) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-900"></div>
+            </div>
+        );
+    }
+ 
     const handlePlayerSelect = (player) => {
         if (selectedPlayers.includes(player)) {
             setSelectedPlayers(prev => prev.filter(p => p !== player));
@@ -1142,66 +239,109 @@ const ModeSelection = ({ onSelectMode }) => {
             setSelectedPlayers(prev => [...prev, player]);
         }
     };
-
+ 
     const handleContinue = () => {
         setGameState(nextState);
     };
-
+ 
     const filteredPlayers = players.filter(player => 
         player.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
+ 
     return (
-        <Card className="w-full max-w-6xl mx-auto">
-            <CardHeader>
-                <CardTitle className="text-gray-900">
-                    {gameMode === 'multiplayer' 
-                        ? `Giocatore ${currentPlayer}: Forma la tua squadra` 
-                        : 'Forma la tua squadra'}
-                </CardTitle>
-                <p className="text-gray-600">Seleziona 5 giocatori blucerchiati degli ultimi 10 anni</p>
-            </CardHeader>
-            <CardContent>
-                <div className="mb-6">
-                    <input
-                        type="text"
-                        placeholder="Cerca un giocatore..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-2 border rounded text-gray-900 bg-white mb-4"
-                    />
+        <Card className="w-full max-w-6xl mx-auto shadow-xl">
+            <CardHeader className="bg-blue-900 text-white p-6 rounded-t-lg">
+                <div>
+                    <CardTitle className="text-2xl font-bold">
+                        {gameMode === 'multiplayer' 
+                            ? `Giocatore ${currentPlayer}: Forma la tua squadra` 
+                            : 'Forma la tua squadra'}
+                    </CardTitle>
+                    <p className="text-blue-200 mt-2">Seleziona 5 giocatori blucerchiati degli ultimi 10 anni</p>
                 </div>
+            </CardHeader>
+            
+            <div className="sticky top-0 z-40 bg-white shadow-md">
+                <div className="w-full bg-gray-200 h-1.5">
+                    <div 
+                        className="bg-blue-600 h-1.5 transition-all duration-300" 
+                        style={{width: `${(selectedPlayers.length / 5) * 100}%`}}
+                    ></div>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-white">
+                    <div className="relative w-full">
+                        <input
+                            type="text"
+                            placeholder="Cerca un giocatore..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full p-3 pl-10 border-2 border-blue-900/20 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 transition-all"
+                        />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-900/50" size={20} />
+                    </div>
+                    <div className="flex items-center space-x-4 ml-4">
+                        <div className="text-right">
+                            <div className="text-sm text-blue-900/80">Giocatori selezionati</div>
+                            <div className={`text-2xl font-bold ${
+                                selectedPlayers.length === 0 ? 'text-red-400' :
+                                selectedPlayers.length < 3 ? 'text-yellow-400' :
+                                selectedPlayers.length < 5 ? 'text-gray-900' :
+                                'text-green-400'
+                            }`}>
+                                {selectedPlayers.length}/5
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleContinue}
+                            disabled={selectedPlayers.length !== 5}
+                            className="bg-blue-900 text-white px-6 py-2 rounded-lg disabled:opacity-50 hover:bg-blue-800 transition-colors font-bold"
+                        >
+                            Continua
+                        </button>
+                    </div>
+                </div>
+            </div>
+ 
+            <CardContent className="p-6">
                 {['Portiere', 'Difensore', 'Centrocampista', 'Attaccante'].map(position => (
-                    <div key={position} className="mb-6">
-                        <h3 className="text-xl font-semibold mb-3 text-gray-900">{position}</h3>
+                    <div key={position} className="mb-8">
+                        <h3 className="text-xl font-semibold mb-4 text-blue-900 border-b-2 border-blue-900/20 pb-2">{position}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
                             {filteredPlayers
                                 .filter(p => p.position === position)
                                 .map(player => (
                                     <div
-                                        key={player.name}
-                                        className={`relative p-4 bg-white rounded-lg shadow transition-transform hover:scale-105 cursor-pointer ${
-                                            selectedPlayers.includes(player) ? 'border-2 border-blue-900' : ''
+                                        key={player.id}  // Usa l'ID da Firebase
+                                        className={`relative p-4 bg-white rounded-lg shadow-md transition-all hover:shadow-xl cursor-pointer group ${
+                                            selectedPlayers.includes(player) 
+                                            ? 'border-2 border-blue-900 bg-blue-50' 
+                                            : 'hover:border-blue-900/30 hover:bg-blue-50/20'
                                         }`}
-                                        onClick={() => handlePlayerSelect(player)}
+                                        onClick={(e) => {
+                                            if (e.target.closest('button')) return;
+                                            handlePlayerSelect(player);
+                                        }}
                                     >
                                         <button 
-                                            className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:bg-gray-100 transition-colors"
+                                            className="absolute top-2 right-2 p-1 bg-white rounded-full shadow hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100 mobile:opacity-100"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                setSelectedPlayerStats(player);
+                                                setSelectedPlayerStats({
+                                                    ...player,
+                                                    stats: playerStats[player.name]
+                                                });
                                             }}
                                         >
                                             <Info className="h-4 w-4 text-blue-900" />
                                         </button>
-
+ 
                                         <img 
                                             src={player.image}
                                             alt={player.name}
-                                            className="w-20 h-20 mx-auto rounded-full border-2 border-blue-900 object-cover aspect-square"
+                                            className="w-24 h-24 mx-auto rounded-full border-4 border-blue-900/20 object-cover aspect-square group-hover:scale-105 transition-transform"
                                         />
-                                        <div className="mt-2 text-center">
-                                            <h3 className="font-semibold text-gray-900">{player.name}</h3>
+                                        <div className="mt-3 text-center">
+                                            <h3 className="font-bold text-gray-900 group-hover:text-blue-900">{player.name}</h3>
                                             <p className="text-sm text-gray-600">{player.position}</p>
                                             <p className="text-xs text-gray-500">{player.years}</p>
                                         </div>
@@ -1210,26 +350,16 @@ const ModeSelection = ({ onSelectMode }) => {
                         </div>
                     </div>
                 ))}
-                <div className="mt-4 text-center">
-                    <p className="mb-4 text-gray-900">
-                        Giocatori selezionati: <span className="font-bold">{selectedPlayers.length}/5</span>
-                    </p>
-                    <button
-                        onClick={handleContinue}
-                        disabled={selectedPlayers.length !== 5}
-                        className="bg-blue-900 text-white px-6 py-2 rounded-lg disabled:opacity-50 hover:bg-blue-800 transition-colors"
-                    >
-                        Continua
-                    </button>
-                </div>
             </CardContent>
         </Card>
     );
-};
+ };
+ 
 
-const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1Name, player2Name }) => {
+
+ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1Name, player2Name }) => {
     const [isLoading, setIsLoading] = useState(gameMode === 'singleplayer');
-
+ 
     useEffect(() => {
         if (gameMode === 'singleplayer') {
             setTimeout(() => {
@@ -1237,7 +367,15 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
             }, 2000);
         }
     }, [gameMode]);
-
+ 
+    if (!player1Team || !player2Team) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-900"></div>
+            </div>
+        );
+    }
+ 
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
@@ -1246,7 +384,7 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
             </div>
         );
     }
-
+ 
     return (
         <Card className="w-full max-w-6xl mx-auto">
             <CardHeader>
@@ -1260,7 +398,7 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
                         <div className="grid grid-cols-3 gap-4">
                             {player1Team.map(player => (
                                 <div 
-                                    key={player.name} 
+                                    key={player.id} 
                                     className="flex flex-col items-center bg-white rounded-lg p-3 shadow transition-transform hover:scale-105"
                                 >
                                     <img 
@@ -1276,10 +414,10 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
                             ))}
                         </div>
                     </div>
-
+ 
                     {/* Divisore */}
                     <div className="hidden md:block w-0.5 h-96 bg-gray-300"></div>
-
+ 
                     {/* Squadra Giocatore 2 o Computer */}
                     <div className="w-full md:w-1/2 bg-red-50 rounded-lg p-6 shadow-md">
                         <h3 className="text-xl font-bold mb-4 text-center text-red-900">
@@ -1288,7 +426,7 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
                         <div className="grid grid-cols-3 gap-4">
                             {player2Team.map(player => (
                                 <div 
-                                    key={player.name} 
+                                    key={player.id} 
                                     className="flex flex-col items-center bg-white rounded-lg p-3 shadow transition-transform hover:scale-105"
                                 >
                                     <img 
@@ -1305,7 +443,7 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
                         </div>
                     </div>
                 </div>
-
+ 
                 <div className="mt-8 text-center">
                     <button
                         onClick={onStartQuiz}
@@ -1317,7 +455,7 @@ const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1N
             </CardContent>
         </Card>
     );
-};
+ };
 
 const Countdown = ({ timeLeft, totalTime = 10 }) => {
     const percentage = (timeLeft / totalTime) * 100;
@@ -1359,7 +497,16 @@ const Countdown = ({ timeLeft, totalTime = 10 }) => {
     );
 };
 
-const QuizSection = ({ player1Team, player2Team, onComplete, gameMode, player1Name, player2Name }) => {
+const QuizSection = ({ 
+    player1Team, 
+    player2Team, 
+    onComplete, 
+    gameMode, 
+    player1Name, 
+    player2Name,
+    questions, 
+    playerStats
+}) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [player1Score, setPlayer1Score] = useState(0);
@@ -1371,10 +518,13 @@ const QuizSection = ({ player1Team, player2Team, onComplete, gameMode, player1Na
     const [winner, setWinner] = useState(null);
     const [currentPlayer, setCurrentPlayer] = useState(1);
 
+    // Shuffle and select questions when component mounts or questions change
     useEffect(() => {
-        const shuffled = [...questions].sort(() => 0.5 - Math.random());
-        setQuizQuestions(shuffled.slice(0, 5));
-    }, []);
+        if (questions && questions.length > 0) {
+            const shuffled = [...questions].sort(() => 0.5 - Math.random());
+            setQuizQuestions(shuffled.slice(0, 5));
+        }
+    }, [questions]);
 
     useEffect(() => {
         let timer;
@@ -1609,7 +759,6 @@ const QuizSection = ({ player1Team, player2Team, onComplete, gameMode, player1Na
         </div>
     );
 };
-
 const Results = ({ scores, onRestart, gameMode, player1Name, player2Name }) => {
     console.log("Dati ricevuti in Results:", scores, gameMode, player1Name, player2Name);
 
@@ -1680,7 +829,12 @@ const Results = ({ scores, onRestart, gameMode, player1Name, player2Name }) => {
     );
 };
 
+
 const SampdoriaQuiz = () => {
+    // Firebase data hook
+    const { players, playerStats, questions, loading, error } = useFirebaseData();
+    
+    // State declarations
     const [computerTeam, setComputerTeam] = useState([]);
     const [gameState, setGameState] = useState('setup');
     const [gameMode, setGameMode] = useState(null);
@@ -1694,7 +848,10 @@ const SampdoriaQuiz = () => {
     const [selectedPlayerStats, setSelectedPlayerStats] = useState(null);
     const [finalScores, setFinalScores] = useState(null);
 
+    // Local storage and game state effect
     useEffect(() => {
+        if (loading || players.length === 0) return;
+
         const storedName = typeof window !== 'undefined' ? localStorage.getItem('playerName') : null;
         const storedAvatar = typeof window !== 'undefined' ? localStorage.getItem('playerAvatar') : null;
         
@@ -1705,8 +862,9 @@ const SampdoriaQuiz = () => {
             });
             setGameState('modeSelection');
         }
-    }, []);
+    }, [loading, players]);
 
+    // Helper functions
     const handleLogout = () => {
         if (typeof window !== 'undefined') {
             localStorage.removeItem('playerName');
@@ -1722,7 +880,6 @@ const SampdoriaQuiz = () => {
     };
 
     const handleQuizComplete = (scores) => {
-        console.log("Quiz completato, punteggi finali:", scores); // <--- Aggiunto Debug
         setFinalScores(scores);
         setGameState('results');
     };
@@ -1735,13 +892,15 @@ const SampdoriaQuiz = () => {
     };
 
     const selectComputerTeam = () => {
-        const computerSelection = [];
+        if (!players || players.length === 0) return;
         
+        const computerSelection = [];
         while (computerSelection.length < 5) {
             const randomPlayer = players[Math.floor(Math.random() * players.length)];
-            computerSelection.push(randomPlayer);
+            if (!computerSelection.includes(randomPlayer)) {
+                computerSelection.push(randomPlayer);
+            }
         }
-        
         setComputerTeam(computerSelection);
     };
 
@@ -1750,11 +909,35 @@ const SampdoriaQuiz = () => {
         if (mode === 'multiplayer') {
             setGameState('player2Setup');
         } else {
-            selectComputerTeam(); // AGGIUNTO: Seleziona la squadra del computer
+            selectComputerTeam();
             setGameState('player1Selection');
         }
     };
 
+    // Loading and error states
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-900 mb-4"></div>
+                    <p className="text-xl text-gray-700">Caricamento dati...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center text-red-600">
+                    <p className="text-xl">Errore nel caricamento dei dati</p>
+                    <p className="text-sm">{error.message}</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Setup component
     const Setup = ({ onComplete, playerNumber }) => {
         const [username, setUsername] = useState('');
         
@@ -1803,6 +986,7 @@ const SampdoriaQuiz = () => {
         );
     };
 
+    // Mode Selection component
     const ModeSelection = ({ onSelectMode }) => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -1810,22 +994,18 @@ const SampdoriaQuiz = () => {
                     Seleziona la Modalità di Gioco
                 </h1>
                 <div className="flex flex-col md:flex-row gap-6">
-                    {/* Modalità Singleplayer */}
+                    {/* Singleplayer Mode */}
                     <div 
                         className="relative w-80 h-96 rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 border-4 border-blue-600"
                         onClick={() => onSelectMode('singleplayer')}
                     >
-                        {/* Immagine di sfondo */}
                         <img 
                             src="/images/modes/singleplayer.png" 
                             alt="Singleplayer" 
                             className="absolute inset-0 w-full h-full object-cover"
                         />
-                        {/* Overlay con GRADIENTE Nero */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                        {/* Leggera sfumatura blu per dare un tocco di colore */}
                         <div className="absolute inset-0 bg-blue-900 bg-opacity-60"></div>
-                        {/* Contenuto */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white text-center">
                             <h2 className="text-3xl font-bold mb-4">Gioca contro il Computer</h2>
                             <p className="text-lg mb-6">
@@ -1837,22 +1017,18 @@ const SampdoriaQuiz = () => {
                         </div>
                     </div>
     
-                    {/* Modalità Multiplayer */}
+                    {/* Multiplayer Mode */}
                     <div 
                         className="relative w-80 h-96 rounded-lg shadow-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 border-4 border-green-600"
                         onClick={() => onSelectMode('multiplayer')}
                     >
-                        {/* Immagine di sfondo */}
                         <img 
                             src="/images/modes/multiplayer.png" 
                             alt="Multiplayer" 
                             className="absolute inset-0 w-full h-full object-cover"
                         />
-                        {/* Overlay con GRADIENTE Nero */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
-                        {/* Leggera sfumatura verde per dare un tocco di colore */}
                         <div className="absolute inset-0 bg-green-900 bg-opacity-60"></div>
-                        {/* Contenuto */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-white text-center">
                             <h2 className="text-3xl font-bold mb-4">Gioca contro un Amico</h2>
                             <p className="text-lg mb-6">
@@ -1867,9 +1043,6 @@ const SampdoriaQuiz = () => {
             </div>
         );
     };
-    
-    
-    
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -1882,6 +1055,8 @@ const SampdoriaQuiz = () => {
                     <Setup onComplete={() => setGameState('player1Selection')} playerNumber={2} />}
                 {gameState === 'player1Selection' && (
                     <PlayerSelection 
+                        players={players}
+                        playerStats={playerStats}
                         selectedPlayers={player1SelectedPlayers}
                         setSelectedPlayers={setPlayer1SelectedPlayers}
                         setGameState={setGameState}
@@ -1893,6 +1068,8 @@ const SampdoriaQuiz = () => {
                 )}
                 {gameState === 'player2Selection' && (
                     <PlayerSelection 
+                        players={players}
+                        playerStats={playerStats}
                         selectedPlayers={player2SelectedPlayers}
                         setSelectedPlayers={setPlayer2SelectedPlayers}
                         setGameState={setGameState}
@@ -1916,6 +1093,8 @@ const SampdoriaQuiz = () => {
                     <QuizSection 
                         player1Team={player1SelectedPlayers} 
                         player2Team={gameMode === 'singleplayer' ? computerTeam : player2SelectedPlayers}
+                        questions={questions}
+                        playerStats={playerStats}
                         onComplete={handleQuizComplete} 
                         gameMode={gameMode}
                         player1Name={playerProfile.name}
@@ -1934,6 +1113,7 @@ const SampdoriaQuiz = () => {
                 
                 <StatsModal 
                     player={selectedPlayerStats}
+                    playerStats={playerStats}
                     isOpen={!!selectedPlayerStats}
                     onClose={() => setSelectedPlayerStats(null)}
                 />
