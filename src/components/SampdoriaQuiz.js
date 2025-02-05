@@ -6,6 +6,8 @@ import { useFirebaseData } from '@/hooks/useFirebaseData';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Search } from 'lucide-react';
+import { useMemo } from 'react';
+
 
         
 
@@ -118,29 +120,57 @@ const StatsModal = ({ player, playerStats, isOpen, onClose }) => {
 const avatars = [
     '/images/avatars/avatar1.png',
     '/images/avatars/avatar2.png',
-    '/images/avatars/avatar3.png'
+    '/images/avatars/avatar3.png',
+    '/images/avatars/avatar4.png',
+    '/images/avatars/avatar5.png',
+    '/images/avatars/avatar6.png',
+    '/images/avatars/avatar7.png',
+    '/images/avatars/avatar8.png',
+    '/images/avatars/avatar9.png',
+    '/images/avatars/avatar10.png',
+    '/images/avatars/avatar11.png',
+    '/images/avatars/avatar12.png',
+    '/images/avatars/avatar13.png',
+    '/images/avatars/avatar14.png',
+    '/images/avatars/avatar15.png',
+    '/images/avatars/avatar16.png',
+    '/images/avatars/avatar17.png',
+    '/images/avatars/avatar18.png',
+    '/images/avatars/avatar19.png',
+    '/images/avatars/avatar20.png',
+    '/images/avatars/avatar21.png',
+    '/images/avatars/avatar22.png',
+    '/images/avatars/avatar23.png'
 ];
 
-const Setup = () => {
+const Setup = ({ onComplete, playerNumber }) => {
     const [username, setUsername] = useState('');
     const [selectedAvatar, setSelectedAvatar] = useState(avatars[0]);
-    
+
     const handleSave = () => {
         if (username.trim()) {
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('playerName', username);
-                localStorage.setItem('playerAvatar', selectedAvatar);
+            const profile = { name: username, avatar: selectedAvatar };
+            if (playerNumber === 1) {
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('playerName', username);
+                    localStorage.setItem('playerAvatar', selectedAvatar);
+                }
+                setPlayerProfile(profile);
+            } else {
+                setPlayer2Profile(profile);
             }
-            setPlayerProfile({ name: username, avatar: selectedAvatar });
-            setGameState('selection');
+            onComplete(profile);
         }
     };
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center">
             <div className="bg-white rounded-lg p-8 w-96">
-                <h2 className="text-2xl font-bold mb-4 text-gray-900">Personalizza il tuo profilo</h2>
+                <h2 className="text-2xl font-bold mb-4 text-gray-900">
+                    {playerNumber === 2 ? "Profilo Giocatore 2" : "Personalizza il tuo profilo"}
+                </h2>
                 <div className="space-y-4">
+                    {/* Input Nome */}
                     <div>
                         <label className="block text-sm font-medium mb-1 text-gray-900">Nome Giocatore:</label>
                         <input
@@ -151,14 +181,16 @@ const Setup = () => {
                             placeholder="Inserisci il tuo nome"
                         />
                     </div>
+
+                    {/* Selezione Avatar */}
                     <div>
                         <label className="block text-sm font-medium mb-2 text-gray-900">Scegli il tuo Avatar</label>
-                        <div className="flex justify-center space-x-4">
+                        <div className="grid grid-cols-4 gap-2">
                             {avatars.map((avatar, index) => (
                                 <button
                                     key={index}
                                     onClick={() => setSelectedAvatar(avatar)}
-                                    className={`p-2 rounded-full border-4 transition-all ${
+                                    className={`p-1 rounded-full border-4 transition-all ${
                                         selectedAvatar === avatar 
                                         ? 'border-blue-900 scale-110' 
                                         : 'border-transparent hover:border-gray-300'
@@ -167,12 +199,14 @@ const Setup = () => {
                                     <img 
                                         src={avatar} 
                                         alt={`Avatar ${index + 1}`} 
-                                        className="w-20 h-20 rounded-full object-cover"
+                                        className="w-16 h-16 rounded-full object-cover"
                                     />
                                 </button>
                             ))}
                         </div>
                     </div>
+
+                    {/* Pulsante Salva */}
                     <button
                         onClick={handleSave}
                         className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800 transition-colors"
@@ -211,18 +245,19 @@ const ModeSelection = ({ onSelectMode }) => {
   };
 
   const PlayerSelection = ({ 
-    players, // Da Firebase
-    playerStats, // Da Firebase
+    players, 
+    playerStats, 
     selectedPlayers, 
     setSelectedPlayers, 
     setGameState,
     setSelectedPlayerStats,
     gameMode,
     currentPlayer,
-    nextState
+    nextState,
+    playerAvatar // 🟢 Nuova prop per l'avatar del giocatore
  }) => {
     const [searchTerm, setSearchTerm] = useState('');
- 
+
     // Loading state
     if (!players || !playerStats) {
         return (
@@ -231,7 +266,7 @@ const ModeSelection = ({ onSelectMode }) => {
             </div>
         );
     }
- 
+
     const handlePlayerSelect = (player) => {
         if (selectedPlayers.includes(player)) {
             setSelectedPlayers(prev => prev.filter(p => p !== player));
@@ -239,26 +274,37 @@ const ModeSelection = ({ onSelectMode }) => {
             setSelectedPlayers(prev => [...prev, player]);
         }
     };
- 
+
     const handleContinue = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scrolla in cima alla pagina
         setGameState(nextState);
     };
- 
+
     const filteredPlayers = players.filter(player => 
         player.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
- 
+
     return (
-        <Card className="w-full max-w-6xl mx-auto shadow-xl">
-            <CardHeader className="bg-blue-900 text-white p-6 rounded-t-lg">
-                <div>
+                <Card className="w-full max-w-6xl mx-auto shadow-xl">
+            <CardHeader className="bg-blue-900 text-white p-6 rounded-t-lg flex flex-col items-start">
+                {/* 🟢 Avatar e titolo sulla stessa riga */}
+                <div className="flex items-center gap-3">
+                    <img 
+                        src={playerAvatar} 
+                        alt={`Avatar Giocatore ${currentPlayer}`} 
+                        className="w-10 h-10 rounded-full border-2 border-white object-cover" 
+                    />
                     <CardTitle className="text-2xl font-bold">
                         {gameMode === 'multiplayer' 
                             ? `Giocatore ${currentPlayer}: Forma la tua squadra` 
                             : 'Forma la tua squadra'}
                     </CardTitle>
-                    <p className="text-blue-200 mt-2">Seleziona 5 giocatori blucerchiati degli ultimi 10 anni</p>
                 </div>
+                
+                {/* 🟢 Testo sulla seconda riga */}
+                <p className="text-blue-200 mt-2 text-left">
+                    Seleziona 5 giocatori della storia blucerchiata
+                </p>
             </CardHeader>
             
             <div className="sticky top-0 z-40 bg-white shadow-md">
@@ -301,7 +347,7 @@ const ModeSelection = ({ onSelectMode }) => {
                     </div>
                 </div>
             </div>
- 
+
             <CardContent className="p-6">
                 {['Portiere', 'Difensore', 'Centrocampista', 'Attaccante'].map(position => (
                     <div key={position} className="mb-8">
@@ -311,7 +357,7 @@ const ModeSelection = ({ onSelectMode }) => {
                                 .filter(p => p.position === position)
                                 .map(player => (
                                     <div
-                                        key={player.id}  // Usa l'ID da Firebase
+                                        key={player.id}  
                                         className={`relative p-4 bg-white rounded-lg shadow-md transition-all hover:shadow-xl cursor-pointer group ${
                                             selectedPlayers.includes(player) 
                                             ? 'border-2 border-blue-900 bg-blue-50' 
@@ -334,7 +380,7 @@ const ModeSelection = ({ onSelectMode }) => {
                                         >
                                             <Info className="h-4 w-4 text-blue-900" />
                                         </button>
- 
+
                                         <img 
                                             src={player.image}
                                             alt={player.name}
@@ -354,12 +400,57 @@ const ModeSelection = ({ onSelectMode }) => {
         </Card>
     );
  };
+
  
 
 
- const TeamDisplay = ({ player1Team, player2Team, onStartQuiz, gameMode, player1Name, player2Name }) => {
+ const TeamDisplay = ({ 
+    player1Team, 
+    player2Team, 
+    onStartQuiz, 
+    gameMode, 
+    player1Name, 
+    player2Name, 
+    player1Avatar, 
+    player2Avatar 
+}) => {
     const [isLoading, setIsLoading] = useState(gameMode === 'singleplayer');
- 
+
+    // Avatar disponibili
+    const avatars = [
+        '/images/avatars/avatar1.png',
+        '/images/avatars/avatar2.png',
+        '/images/avatars/avatar3.png',
+        '/images/avatars/avatar4.png',
+        '/images/avatars/avatar5.png',
+        '/images/avatars/avatar6.png',
+        '/images/avatars/avatar7.png',
+        '/images/avatars/avatar8.png',
+        '/images/avatars/avatar9.png',
+        '/images/avatars/avatar10.png',
+        '/images/avatars/avatar11.png',
+        '/images/avatars/avatar12.png',
+        '/images/avatars/avatar13.png',
+        '/images/avatars/avatar14.png',
+        '/images/avatars/avatar15.png',
+        '/images/avatars/avatar16.png',
+        '/images/avatars/avatar17.png',
+        '/images/avatars/avatar18.png',
+        '/images/avatars/avatar19.png',
+        '/images/avatars/avatar20.png',
+        '/images/avatars/avatar21.png',
+        '/images/avatars/avatar22.png',
+        '/images/avatars/avatar23.png'
+    ];
+
+    // Se il gioco è singleplayer, assegna un avatar casuale al computer
+    const computerAvatar = useMemo(() => {
+        return gameMode === 'singleplayer' 
+            ? avatars[Math.floor(Math.random() * avatars.length)]
+            : player2Avatar;
+    }, [gameMode, player2Avatar]);
+
+    
     useEffect(() => {
         if (gameMode === 'singleplayer') {
             setTimeout(() => {
@@ -367,7 +458,7 @@ const ModeSelection = ({ onSelectMode }) => {
             }, 2000);
         }
     }, [gameMode]);
- 
+
     if (!player1Team || !player2Team) {
         return (
             <div className="flex items-center justify-center p-8">
@@ -375,7 +466,7 @@ const ModeSelection = ({ onSelectMode }) => {
             </div>
         );
     }
- 
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-12">
@@ -384,7 +475,7 @@ const ModeSelection = ({ onSelectMode }) => {
             </div>
         );
     }
- 
+
     return (
         <Card className="w-full max-w-6xl mx-auto">
             <CardHeader>
@@ -394,7 +485,14 @@ const ModeSelection = ({ onSelectMode }) => {
                 <div className="flex flex-col md:flex-row gap-8 items-center">
                     {/* Squadra Giocatore 1 */}
                     <div className="w-full md:w-1/2 bg-blue-50 rounded-lg p-6 shadow-md">
-                        <h3 className="text-xl font-bold mb-4 text-center text-blue-900">{player1Name}</h3>
+                        <div className="flex items-center justify-center mb-4">
+                            <img 
+                                src={player1Avatar} 
+                                alt={`Avatar ${player1Name}`} 
+                                className="w-12 h-12 rounded-full border-2 border-blue-900 object-cover mr-3"
+                            />
+                            <h3 className="text-xl font-bold text-blue-900">{player1Name}</h3>
+                        </div>
                         <div className="grid grid-cols-3 gap-4">
                             {player1Team.map(player => (
                                 <div 
@@ -414,15 +512,22 @@ const ModeSelection = ({ onSelectMode }) => {
                             ))}
                         </div>
                     </div>
- 
+
                     {/* Divisore */}
                     <div className="hidden md:block w-0.5 h-96 bg-gray-300"></div>
- 
+
                     {/* Squadra Giocatore 2 o Computer */}
                     <div className="w-full md:w-1/2 bg-red-50 rounded-lg p-6 shadow-md">
-                        <h3 className="text-xl font-bold mb-4 text-center text-red-900">
-                            {gameMode === 'singleplayer' ? 'Squadra Computer' : player2Name}
-                        </h3>
+                        <div className="flex items-center justify-center mb-4">
+                            <img 
+                                src={player2Avatar} 
+                                alt={`Avatar ${player2Name}`} 
+                                className="w-12 h-12 rounded-full border-2 border-red-900 object-cover mr-3"
+                            />
+                            <h3 className="text-xl font-bold text-red-900">
+                                {gameMode === 'singleplayer' ? 'Squadra Computer' : player2Name}
+                            </h3>
+                        </div>
                         <div className="grid grid-cols-3 gap-4">
                             {player2Team.map(player => (
                                 <div 
@@ -443,7 +548,7 @@ const ModeSelection = ({ onSelectMode }) => {
                         </div>
                     </div>
                 </div>
- 
+
                 <div className="mt-8 text-center">
                     <button
                         onClick={onStartQuiz}
@@ -455,7 +560,8 @@ const ModeSelection = ({ onSelectMode }) => {
             </CardContent>
         </Card>
     );
- };
+};
+
 
  const Countdown = ({ timeLeft, totalTime = 10 }) => {
     const percentage = (timeLeft / totalTime) * 100;
@@ -504,6 +610,8 @@ const QuizSection = ({
     gameMode,
     player1Name,
     player2Name,
+    player1Avatar, // Nuovo parametro
+    player2Avatar, // Nuovo parametro
     questions 
 }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -663,18 +771,25 @@ const QuizSection = ({
                 </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
+                 <div className="grid md:grid-cols-2 gap-8 mb-8">
                 {/* Player 1 Card */}
                 <Card className="bg-blue-50">
-                    <CardHeader>
-                        <CardTitle className="text-center text-blue-900">
-                            {player1Name}
-                            {gameMode === 'multiplayer' && (
-                                <span className="ml-2 text-sm text-blue-600">
-                                    {player1Confirmed ? '(Confermato)' : '(In attesa...)'}
-                                </span>
-                            )}
-                        </CardTitle>
+                    <CardHeader className="flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <img 
+                                src={player1Avatar} 
+                                alt={`Avatar ${player1Name}`} 
+                                className="w-10 h-10 rounded-full border-2 border-blue-900 object-cover" 
+                            />
+                            <CardTitle className="text-center text-blue-900">
+                                {player1Name}
+                            </CardTitle>
+                        </div>
+                        {gameMode === 'multiplayer' && (
+                            <span className="text-sm text-blue-600">
+                                {player1Confirmed ? '(Confermato)' : '(In attesa...)'}
+                            </span>
+                        )}
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 gap-4">
@@ -716,15 +831,22 @@ const QuizSection = ({
 
                 {/* Player 2 Card */}
                 <Card className={gameMode === 'singleplayer' ? 'bg-red-50' : 'bg-green-50'}>
-                    <CardHeader>
+                    <CardHeader className="flex flex-col items-center justify-center">
+                    <div className="flex items-center gap-3 mb-2">
+                        <img 
+                            src={player2Avatar} 
+                            alt={`Avatar ${player2Name}`} 
+                            className="w-10 h-10 rounded-full border-2 border-red-900 object-cover" 
+                        />
                         <CardTitle className="text-center text-red-900">
                             {player2Name}
-                            {gameMode === 'multiplayer' && (
-                                <span className="ml-2 text-sm text-green-600">
-                                    {player2Confirmed ? '(Confermato)' : '(In attesa...)'}
-                                </span>
-                            )}
                         </CardTitle>
+                    </div>
+                    {gameMode === 'multiplayer' && (
+                        <span className="text-sm text-green-600">
+                            {player2Confirmed ? '(Confermato)' : '(In attesa...)'}
+                        </span>
+                    )}
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-3 gap-4">
@@ -895,6 +1017,32 @@ const Results = ({ scores, onRestart, gameMode, player1Name, player2Name }) => {
 const SampdoriaQuiz = () => {
     // Firebase data hook
     const { players, playerStats, questions, loading, error } = useFirebaseData();
+
+    const avatars = [
+        '/images/avatars/avatar1.png',
+        '/images/avatars/avatar2.png',
+        '/images/avatars/avatar3.png',
+        '/images/avatars/avatar4.png',
+        '/images/avatars/avatar5.png',
+        '/images/avatars/avatar6.png',
+        '/images/avatars/avatar7.png',
+        '/images/avatars/avatar8.png',
+        '/images/avatars/avatar9.png',
+        '/images/avatars/avatar10.png',
+        '/images/avatars/avatar11.png',
+        '/images/avatars/avatar12.png',
+        '/images/avatars/avatar13.png',
+        '/images/avatars/avatar14.png',
+        '/images/avatars/avatar15.png',
+        '/images/avatars/avatar16.png',
+        '/images/avatars/avatar17.png',
+        '/images/avatars/avatar18.png',
+        '/images/avatars/avatar19.png',
+        '/images/avatars/avatar20.png',
+        '/images/avatars/avatar21.png',
+        '/images/avatars/avatar22.png',
+        '/images/avatars/avatar23.png'
+    ];
     
     // State declarations
     const [computerTeam, setComputerTeam] = useState([]);
@@ -909,6 +1057,9 @@ const SampdoriaQuiz = () => {
     const [player2SelectedPlayers, setPlayer2SelectedPlayers] = useState([]);
     const [selectedPlayerStats, setSelectedPlayerStats] = useState(null);
     const [finalScores, setFinalScores] = useState(null);
+    
+    // Add this line with your other state declarations
+    const [computerAvatar, setComputerAvatar] = useState(() => avatars[Math.floor(Math.random() * avatars.length)]);
 
     // Local storage and game state effect
     useEffect(() => {
@@ -926,55 +1077,61 @@ const SampdoriaQuiz = () => {
         }
     }, [loading, players]);
 
-    // Helper functions
-    const handleLogout = () => {
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('playerName');
-            localStorage.removeItem('playerAvatar');
+   // Helper functions
+   const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem('playerName');
+        localStorage.removeItem('playerAvatar');
+    }
+    setGameState('setup');
+    setPlayerProfile({ name: '', avatar: '/api/placeholder/40/40' });
+    setPlayer1SelectedPlayers([]);
+    setPlayer2SelectedPlayers([]);
+    setFinalScores(null);
+    setGameMode(null);
+    setPlayer2Profile(null);
+    setComputerAvatar(null);
+};
+
+const handleQuizComplete = (scores) => {
+    setFinalScores(scores);
+    setGameState('results');
+};
+
+const handleRestart = () => {
+    setPlayer1SelectedPlayers([]);
+    setPlayer2SelectedPlayers([]);
+    setFinalScores(null);
+    setGameState('modeSelection');
+    // Don't reset computerAvatar here to keep it consistent
+};
+
+const selectComputerTeam = () => {
+    if (!players || players.length === 0) return;
+    
+    const computerSelection = [];
+    while (computerSelection.length < 5) {
+        const randomPlayer = players[Math.floor(Math.random() * players.length)];
+        if (!computerSelection.includes(randomPlayer)) {
+            computerSelection.push(randomPlayer);
         }
-        setGameState('setup');
-        setPlayerProfile({ name: '', avatar: '/api/placeholder/40/40' });
-        setPlayer1SelectedPlayers([]);
-        setPlayer2SelectedPlayers([]);
-        setFinalScores(null);
-        setGameMode(null);
-        setPlayer2Profile(null);
-    };
-
-    const handleQuizComplete = (scores) => {
-        setFinalScores(scores);
-        setGameState('results');
-    };
-
-    const handleRestart = () => {
-        setPlayer1SelectedPlayers([]);
-        setPlayer2SelectedPlayers([]);
-        setFinalScores(null);
-        setGameState('modeSelection');
-    };
-
-    const selectComputerTeam = () => {
-        if (!players || players.length === 0) return;
-        
-        const computerSelection = [];
-        while (computerSelection.length < 5) {
-            const randomPlayer = players[Math.floor(Math.random() * players.length)];
-            if (!computerSelection.includes(randomPlayer)) {
-                computerSelection.push(randomPlayer);
-            }
-        }
-        setComputerTeam(computerSelection);
-    };
-
-    const handleModeSelection = (mode) => {
-        setGameMode(mode);
-        if (mode === 'multiplayer') {
-            setGameState('player2Setup');
-        } else {
-            selectComputerTeam();
-            setGameState('player1Selection');
-        }
-    };
+    }
+    
+    const randomComputerAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+    
+    // Use functional update to ensure state is set correctly
+    setComputerTeam(computerSelection);
+    setComputerAvatar(randomComputerAvatar);
+};
+const handleModeSelection = (mode) => {
+    setGameMode(mode);
+    if (mode === 'multiplayer') {
+        setGameState('player2Setup');
+    } else {
+        selectComputerTeam();
+        setGameState('player1Selection');
+    }
+};
 
     // Loading and error states
     if (loading) {
@@ -1002,23 +1159,26 @@ const SampdoriaQuiz = () => {
     // Setup component
     const Setup = ({ onComplete, playerNumber }) => {
         const [username, setUsername] = useState('');
-        
+        const [selectedAvatar, setSelectedAvatar] = useState('/images/avatars/avatar1.png'); // 🟢 Stato per avatar predefinito
+    
         const handleSave = () => {
             if (username.trim()) {
-                const profile = { name: username, avatar: '/api/placeholder/40/40' };
+                const profile = { name: username, avatar: selectedAvatar };
+    
                 if (playerNumber === 1) {
                     if (typeof window !== 'undefined') {
                         localStorage.setItem('playerName', username);
-                        localStorage.setItem('playerAvatar', '/api/placeholder/40/40');
+                        localStorage.setItem('playerAvatar', selectedAvatar);
                     }
                     setPlayerProfile(profile);
                 } else {
                     setPlayer2Profile(profile);
                 }
+    
                 onComplete(profile);
             }
         };
-
+    
         return (
             <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center">
                 <div className="bg-white rounded-lg p-8 w-96">
@@ -1026,6 +1186,7 @@ const SampdoriaQuiz = () => {
                         {playerNumber === 2 ? "Profilo Giocatore 2" : "Personalizza il tuo profilo"}
                     </h2>
                     <div className="space-y-4">
+                        {/* Input Nome */}
                         <div>
                             <label className="block text-sm font-medium mb-1 text-gray-900">Nome Giocatore:</label>
                             <input
@@ -1036,9 +1197,36 @@ const SampdoriaQuiz = () => {
                                 placeholder="Inserisci il tuo nome"
                             />
                         </div>
+    
+                        {/* Selezione Avatar */}
+                        <div>
+                            <label className="block text-sm font-medium mb-2 text-gray-900">Scegli il tuo Avatar</label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {avatars.map((avatar, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setSelectedAvatar(avatar)}
+                                        className={`p-1 rounded-full border-4 transition-all ${
+                                            selectedAvatar === avatar 
+                                            ? 'border-blue-900 scale-110' 
+                                            : 'border-transparent hover:border-gray-300'
+                                        }`}
+                                    >
+                                        <img 
+                                            src={avatar} 
+                                            alt={`Avatar ${index + 1}`} 
+                                            className="w-16 h-16 rounded-full object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+    
+                        {/* Pulsante Salva */}
                         <button
                             onClick={handleSave}
                             className="w-full bg-blue-900 text-white p-2 rounded hover:bg-blue-800 transition-colors"
+                            disabled={!username.trim()}
                         >
                             Salva Profilo
                         </button>
@@ -1047,7 +1235,7 @@ const SampdoriaQuiz = () => {
             </div>
         );
     };
-
+    
     // Mode Selection component
     const ModeSelection = ({ onSelectMode }) => {
         return (
@@ -1125,6 +1313,7 @@ const SampdoriaQuiz = () => {
                         setSelectedPlayerStats={setSelectedPlayerStats}
                         gameMode={gameMode}
                         currentPlayer={1}
+                        playerAvatar={playerProfile.avatar} // 🟢 Passa l'avatar del giocatore 1
                         nextState={gameMode === 'singleplayer' ? 'team-display' : 'player2Selection'}
                     />
                 )}
@@ -1138,6 +1327,7 @@ const SampdoriaQuiz = () => {
                         setSelectedPlayerStats={setSelectedPlayerStats}
                         gameMode={gameMode}
                         currentPlayer={2}
+                        playerAvatar={player2Profile?.avatar || '/images/avatars/avatar1.png'} // 🟢 Passa l'avatar del giocatore 2
                         nextState="team-display"
                     />
                 )}
@@ -1149,20 +1339,25 @@ const SampdoriaQuiz = () => {
                         gameMode={gameMode}
                         player1Name={playerProfile.name}
                         player2Name={gameMode === 'multiplayer' ? player2Profile.name : 'Computer'}
+                        player1Avatar={playerProfile.avatar}
+                        player2Avatar={gameMode === 'multiplayer' ? player2Profile.avatar : computerAvatar}
                     />
                 )}
-                {gameState === 'quiz' && (
-                    <QuizSection 
-                        player1Team={player1SelectedPlayers} 
-                        player2Team={gameMode === 'singleplayer' ? computerTeam : player2SelectedPlayers}
-                        questions={questions}
-                        playerStats={playerStats}
-                        onComplete={handleQuizComplete} 
-                        gameMode={gameMode}
-                        player1Name={playerProfile.name}
-                        player2Name={gameMode === 'multiplayer' ? player2Profile.name : 'Computer'}
-                    />
-                )}
+
+{               gameState === 'quiz' && (
+                <QuizSection 
+                    player1Team={player1SelectedPlayers} 
+                    player2Team={gameMode === 'singleplayer' ? computerTeam : player2SelectedPlayers}
+                    questions={questions}
+                    playerStats={playerStats}
+                    onComplete={handleQuizComplete} 
+                    gameMode={gameMode}
+                    player1Name={playerProfile.name}
+                    player2Name={gameMode === 'multiplayer' ? player2Profile.name : 'Computer'}
+                    player1Avatar={playerProfile.avatar}
+                    player2Avatar={gameMode === 'singleplayer' ? computerAvatar : player2Profile.avatar}
+                />
+            )}      
                 {gameState === 'results' && finalScores && 
                     <Results 
                         scores={finalScores} 
