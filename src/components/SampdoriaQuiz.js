@@ -457,7 +457,7 @@ const ModeSelection = ({ onSelectMode }) => {
     );
  };
 
-const Countdown = ({ timeLeft, totalTime = 10 }) => {
+ const Countdown = ({ timeLeft, totalTime = 10 }) => {
     const percentage = (timeLeft / totalTime) * 100;
     const strokeColor = timeLeft <= 3 ? '#EF4444' : '#1E3A8A'; // Rosso quando sotto 3 secondi, blu altrimenti
 
@@ -498,14 +498,13 @@ const Countdown = ({ timeLeft, totalTime = 10 }) => {
 };
 
 const QuizSection = ({ 
-    player1Team, 
-    player2Team, 
-    onComplete, 
-    gameMode, 
-    player1Name, 
+    player1Team,
+    player2Team,
+    onComplete,
+    gameMode,
+    player1Name,
     player2Name,
-    questions, 
-    playerStats
+    questions 
 }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [quizQuestions, setQuizQuestions] = useState([]);
@@ -515,12 +514,12 @@ const QuizSection = ({
     const [timeLeft, setTimeLeft] = useState(10);
     const [player1SelectedForQuestion, setPlayer1SelectedForQuestion] = useState(null);
     const [player2SelectedForQuestion, setPlayer2SelectedForQuestion] = useState(null);
+    const [player1Confirmed, setPlayer1Confirmed] = useState(false);
+    const [player2Confirmed, setPlayer2Confirmed] = useState(false);
     const [winner, setWinner] = useState(null);
-    const [currentPlayer, setCurrentPlayer] = useState(1);
 
-    // Shuffle and select questions when component mounts or questions change
     useEffect(() => {
-        if (questions && questions.length > 0) {
+        if (questions?.length > 0) {
             const shuffled = [...questions].sort(() => 0.5 - Math.random());
             setQuizQuestions(shuffled.slice(0, 5));
         }
@@ -530,87 +529,106 @@ const QuizSection = ({
         let timer;
         if (!answered && timeLeft > 0) {
             timer = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
-        } else if (timeLeft === 0 && !answered) {
-            handleAnswer(null);
+        } else if (timeLeft === 0) {
+            handleTimeUp();
         }
         return () => clearInterval(timer);
     }, [timeLeft, answered]);
 
-    const getComputerAnswer = () => {
-        return player2Team[Math.floor(Math.random() * player2Team.length)];
+    useEffect(() => {
+        if (gameMode === 'multiplayer' && player1Confirmed && player2Confirmed) {
+            evaluateAnswers();
+        }
+    }, [player1Confirmed, player2Confirmed]);
+
+    const handleTimeUp = () => {
+        if (gameMode === 'multiplayer') {
+            if (!player1Confirmed) setPlayer1Confirmed(true);
+            if (!player2Confirmed) setPlayer2Confirmed(true);
+        } else {
+            handleSinglePlayerAnswer(null);
+        }
     };
 
-    const handleAnswer = (playerAnswer) => {
+    const handleSinglePlayerAnswer = (playerAnswer) => {
         if (answered) return;
         
-        const currentQuestion = quizQuestions[currentQuestionIndex];
-        
-        if (gameMode === 'singleplayer') {
-            setAnswered(true);
-            setPlayer1SelectedForQuestion(playerAnswer);
-            const computerAnswer = getComputerAnswer();
-            setPlayer2SelectedForQuestion(computerAnswer);
+        setAnswered(true);
+        setPlayer1SelectedForQuestion(playerAnswer);
+        const computerAnswer = player2Team[Math.floor(Math.random() * player2Team.length)];
+        setPlayer2SelectedForQuestion(computerAnswer);
 
-            if (playerAnswer && computerAnswer) {
-                const comparisonResult = currentQuestion.compare(playerAnswer, computerAnswer);
-                
-                if (comparisonResult > 0) {
-                    setPlayer1Score(prev => prev + 3);
-                    setWinner(playerAnswer);
-                } else if (comparisonResult < 0) {
-                    setPlayer2Score(prev => prev + 3);
-                    setWinner(computerAnswer);
-                } else {
-                    setPlayer1Score(prev => prev + 1);
-                    setPlayer2Score(prev => prev + 1);
-                    setWinner(null);
-                }
-            } else if (playerAnswer) {
+        // Valuta le risposte
+        if (playerAnswer && computerAnswer) {
+            const comparisonResult = quizQuestions[currentQuestionIndex].compare(playerAnswer, computerAnswer);
+            if (comparisonResult > 0) {
                 setPlayer1Score(prev => prev + 3);
                 setWinner(playerAnswer);
-            } else if (computerAnswer) {
+            } else if (comparisonResult < 0) {
                 setPlayer2Score(prev => prev + 3);
                 setWinner(computerAnswer);
-            }
-        } else {
-            if (currentPlayer === 1) {
-                setPlayer1SelectedForQuestion(playerAnswer);
-                setCurrentPlayer(2);
-                setTimeLeft(10);
             } else {
-                setAnswered(true);
-                setPlayer2SelectedForQuestion(playerAnswer);
-                if (player1SelectedForQuestion && playerAnswer) {
-                    const comparisonResult = currentQuestion.compare(player1SelectedForQuestion, playerAnswer);
-                    if (comparisonResult > 0) {
-                        setPlayer1Score(prev => prev + 3);
-                        setWinner(player1SelectedForQuestion);
-                    } else if (comparisonResult < 0) {
-                        setPlayer2Score(prev => prev + 3);
-                        setWinner(playerAnswer);
-                    } else {
-                        setPlayer1Score(prev => prev + 1);
-                        setPlayer2Score(prev => prev + 1);
-                        setWinner(null);
-                    }
-                }
+                setPlayer1Score(prev => prev + 1);
+                setPlayer2Score(prev => prev + 1);
+                setWinner(null);
             }
         }
 
-        if (answered || gameMode === 'singleplayer' || currentPlayer === 2) {
-            setTimeout(() => {
-                if (currentQuestionIndex < quizQuestions.length - 1) {
-                    setCurrentQuestionIndex(prev => prev + 1);
-                    setAnswered(false);
-                    setTimeLeft(10);
-                    setPlayer1SelectedForQuestion(null);
-                    setPlayer2SelectedForQuestion(null);
-                    setWinner(null);
-                    setCurrentPlayer(1);
-                } else {
-                    onComplete({ player1Score, player2Score });
-                }
-            }, 3000);
+        // Passa alla prossima domanda dopo 3 secondi
+        setTimeout(nextQuestion, 3000);
+    };
+
+    const handlePlayerSelection = (player, playerNumber) => {
+        if (answered) return;
+        if (playerNumber === 1 && !player1Confirmed) {
+            setPlayer1SelectedForQuestion(player);
+        } else if (playerNumber === 2 && !player2Confirmed) {
+            setPlayer2SelectedForQuestion(player);
+        }
+    };
+
+    const handleConfirmAnswer = (playerNumber) => {
+        if (playerNumber === 1 && player1SelectedForQuestion) {
+            setPlayer1Confirmed(true);
+        } else if (playerNumber === 2 && player2SelectedForQuestion) {
+            setPlayer2Confirmed(true);
+        }
+    };
+
+    const evaluateAnswers = () => {
+        setAnswered(true);
+        const currentQuestion = quizQuestions[currentQuestionIndex];
+
+        if (player1SelectedForQuestion && player2SelectedForQuestion) {
+            const comparisonResult = currentQuestion.compare(player1SelectedForQuestion, player2SelectedForQuestion);
+            if (comparisonResult > 0) {
+                setPlayer1Score(prev => prev + 3);
+                setWinner(player1SelectedForQuestion);
+            } else if (comparisonResult < 0) {
+                setPlayer2Score(prev => prev + 3);
+                setWinner(player2SelectedForQuestion);
+            } else {
+                setPlayer1Score(prev => prev + 1);
+                setPlayer2Score(prev => prev + 1);
+                setWinner(null);
+            }
+        }
+
+        setTimeout(nextQuestion, 3000);
+    };
+
+    const nextQuestion = () => {
+        if (currentQuestionIndex < quizQuestions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+            setAnswered(false);
+            setTimeLeft(10);
+            setPlayer1SelectedForQuestion(null);
+            setPlayer2SelectedForQuestion(null);
+            setPlayer1Confirmed(false);
+            setPlayer2Confirmed(false);
+            setWinner(null);
+        } else {
+            onComplete({ player1Score, player2Score });
         }
     };
 
@@ -636,7 +654,7 @@ const QuizSection = ({
                     />
                 </div>
             </div>
-    
+            
             <Card className="mb-8 border border-blue-300 shadow-lg">
                 <CardContent className="p-6 flex items-center justify-center min-h-[150px]">
                     <h2 className="text-3xl font-bold text-center text-blue-900">
@@ -646,63 +664,106 @@ const QuizSection = ({
             </Card>
 
             <div className="grid md:grid-cols-2 gap-8 mb-8">
+                {/* Player 1 Card */}
                 <Card className="bg-blue-50">
                     <CardHeader>
-                        <CardTitle className="text-center text-blue-900">{player1Name}</CardTitle>
+                        <CardTitle className="text-center text-blue-900">
+                            {player1Name}
+                            {gameMode === 'multiplayer' && (
+                                <span className="ml-2 text-sm text-blue-600">
+                                    {player1Confirmed ? '(Confermato)' : '(In attesa...)'}
+                                </span>
+                            )}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4">
-                        {player1Team.map((player, index) => (
-                            <div
-                                key={`player1-${player.name}-${player.position}-${index}`}
-                                className={`relative p-4 bg-white rounded-lg shadow transition-transform hover:scale-105 cursor-pointer ${
-                                    player1SelectedForQuestion?.name === player.name ? 'border-4 border-blue-500' : ''
-                                }`}
-                                onClick={() => !answered && (gameMode === 'singleplayer' || currentPlayer === 1) && handleAnswer(player)}
-                            >
-                                <img 
-                                    src={player.image}
-                                    alt={player.name}
-                                    className="w-20 h-20 mx-auto rounded-full border-4 border-blue-500 object-cover aspect-square"
-                                />
-                                <div className="mt-2 text-center">
-                                    <h3 className="font-semibold text-gray-900">{player.name}</h3>
-                                    <p className="text-sm text-gray-600">{player.position}</p>
-                                    <p className="text-xs text-gray-500">{player.years}</p>
+                    <CardContent>
+                        <div className="grid grid-cols-3 gap-4">
+                            {player1Team.map((player, index) => (
+                                <div
+                                    key={index}
+                                    onClick={() => gameMode === 'multiplayer' 
+                                        ? handlePlayerSelection(player, 1) 
+                                        : !answered && handleSinglePlayerAnswer(player)}
+                                    className={`relative p-4 bg-white rounded-lg shadow cursor-pointer h-52
+                                        ${player1SelectedForQuestion?.name === player.name ? 'border-4 border-blue-500' : 'border-4 border-transparent'}`}
+                                >
+                                    <img 
+                                        src={player.image}
+                                        alt={player.name}
+                                        className="w-20 h-20 mx-auto rounded-full border-4 border-blue-500 object-cover aspect-square"
+                                    />
+                                    <div className="mt-2 text-center">
+                                        <h3 className="font-semibold text-gray-900">{player.name}</h3>
+                                        <p className="text-sm text-gray-600">{player.position}</p>
+                                        <p className="text-xs text-gray-500">{player.years}</p>
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                        {gameMode === 'multiplayer' && !answered && (
+                            <div className="mt-4 text-center">
+                                <button
+                                    onClick={() => handleConfirmAnswer(1)}
+                                    disabled={!player1SelectedForQuestion || player1Confirmed}
+                                    className="px-4 py-2 bg-blue-900 text-white rounded-lg disabled:opacity-50 hover:bg-blue-800"
+                                >
+                                    {player1Confirmed ? 'Risposta Confermata' : 'Conferma Risposta'}
+                                </button>
                             </div>
-                        ))}
+                        )}
                     </CardContent>
                 </Card>
 
+                {/* Player 2 Card */}
                 <Card className={gameMode === 'singleplayer' ? 'bg-red-50' : 'bg-green-50'}>
                     <CardHeader>
-                        <CardTitle className="text-center text-red-900">{player2Name}</CardTitle>
+                        <CardTitle className="text-center text-red-900">
+                            {player2Name}
+                            {gameMode === 'multiplayer' && (
+                                <span className="ml-2 text-sm text-green-600">
+                                    {player2Confirmed ? '(Confermato)' : '(In attesa...)'}
+                                </span>
+                            )}
+                        </CardTitle>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4">
-                        {player2Team.map((player, index) => (
-                            <div 
-                                key={`player2-${player.name}-${player.position}-${index}`}
-                                className={`p-4 bg-white rounded-lg shadow ${
-                                    player2SelectedForQuestion?.name === player.name ? 'border-4 border-red-500' : ''
-                                } ${gameMode === 'multiplayer' ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
-                                onClick={() => gameMode === 'multiplayer' && !answered && currentPlayer === 2 && handleAnswer(player)}
-                            >
-                                <img 
-                                    src={player.image}
-                                    alt={player.name}
-                                    className="w-20 h-20 mx-auto rounded-full border-4 border-red-500 object-cover aspect-square"
-                                />
-                                <div className="mt-2 text-center">
-                                    <h3 className="font-semibold text-gray-900">{player.name}</h3>
-                                    <p className="text-sm text-gray-600">{player.position}</p>
-                                    <p className="text-xs text-gray-500">{player.years}</p>
+                    <CardContent>
+                        <div className="grid grid-cols-3 gap-4">
+                            {player2Team.map((player, index) => (
+                                <div 
+                                    key={index}
+                                    onClick={() => gameMode === 'multiplayer' && handlePlayerSelection(player, 2)}
+                                    className={`p-4 bg-white rounded-lg shadow cursor-pointer h-52
+                                        ${player2SelectedForQuestion?.name === player.name ? 'border-4 border-red-500' : 'border-4 border-transparent'}`}
+                                >
+                                    <img 
+                                        src={player.image}
+                                        alt={player.name}
+                                        className="w-20 h-20 mx-auto rounded-full border-4 border-red-500 object-cover aspect-square"
+                                    />
+                                    <div className="mt-2 text-center">
+                                        <h3 className="font-semibold text-gray-900">{player.name}</h3>
+                                        <p className="text-sm text-gray-600">{player.position}</p>
+                                        <p className="text-xs text-gray-500">{player.years}</p>
+                                    </div>
                                 </div>
+                            ))}
+                        </div>
+                        {gameMode === 'multiplayer' && !answered && (
+                            <div className="mt-4 text-center">
+                                <button
+                                    onClick={() => handleConfirmAnswer(2)}
+                                    disabled={!player2SelectedForQuestion || player2Confirmed}
+                                    className="px-4 py-2 bg-red-900 text-white rounded-lg disabled:opacity-50 hover:bg-red-800"
+                                >
+                                    {player2Confirmed ? 'Risposta Confermata' : 'Conferma Risposta'}
+                                </button>
                             </div>
-                        ))}
+                        )}
                     </CardContent>
                 </Card>
             </div>
 
+            {/* Results Modal */}
             {answered && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-gray-800 p-8 rounded-lg max-w-2xl w-full relative">
@@ -743,7 +804,6 @@ const QuizSection = ({
                                 )}
                             </div>
                         </div>
-
                         <div className="mt-6 text-center">
                             {winner ? (
                                 <p className="text-xl text-white">
@@ -759,6 +819,8 @@ const QuizSection = ({
         </div>
     );
 };
+
+
 const Results = ({ scores, onRestart, gameMode, player1Name, player2Name }) => {
     console.log("Dati ricevuti in Results:", scores, gameMode, player1Name, player2Name);
 
