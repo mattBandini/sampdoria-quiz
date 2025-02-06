@@ -610,8 +610,8 @@ const QuizSection = ({
     gameMode,
     player1Name,
     player2Name,
-    player1Avatar, // Nuovo parametro
-    player2Avatar, // Nuovo parametro
+    player1Avatar,
+    player2Avatar,
     questions 
 }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -625,6 +625,18 @@ const QuizSection = ({
     const [player1Confirmed, setPlayer1Confirmed] = useState(false);
     const [player2Confirmed, setPlayer2Confirmed] = useState(false);
     const [winner, setWinner] = useState(null);
+
+    useEffect(() => {
+        if (currentQuestionIndex === quizQuestions.length - 1 && answered) {
+            const timer = setTimeout(() => {
+                onComplete({
+                    player1Score,
+                    player2Score
+                });
+            }, 2500);
+            return () => clearTimeout(timer);
+        }
+    }, [currentQuestionIndex, answered, player1Score, player2Score]);
 
     useEffect(() => {
         if (questions?.length > 0) {
@@ -665,10 +677,14 @@ const QuizSection = ({
         setPlayer1SelectedForQuestion(playerAnswer);
         const computerAnswer = player2Team[Math.floor(Math.random() * player2Team.length)];
         setPlayer2SelectedForQuestion(computerAnswer);
-
-        // Valuta le risposte
-        if (playerAnswer && computerAnswer) {
-            const comparisonResult = quizQuestions[currentQuestionIndex].compare(playerAnswer, computerAnswer);
+    
+        const currentQuestion = quizQuestions[currentQuestionIndex];
+    
+        if (!playerAnswer) {
+            setPlayer2Score(prev => prev + 3);
+            setWinner(computerAnswer);
+        } else {
+            const comparisonResult = currentQuestion.compare(playerAnswer, computerAnswer);
             if (comparisonResult > 0) {
                 setPlayer1Score(prev => prev + 3);
                 setWinner(playerAnswer);
@@ -681,9 +697,19 @@ const QuizSection = ({
                 setWinner(null);
             }
         }
-
-        // Passa alla prossima domanda dopo 3 secondi
-        setTimeout(nextQuestion, 3000);
+    
+        if (currentQuestionIndex < quizQuestions.length - 1) {
+            setTimeout(() => {
+                setCurrentQuestionIndex(prev => prev + 1);
+                setAnswered(false);
+                setTimeLeft(10);
+                setPlayer1SelectedForQuestion(null);
+                setPlayer2SelectedForQuestion(null);
+                setPlayer1Confirmed(false);
+                setPlayer2Confirmed(false);
+                setWinner(null);
+            }, 3000);
+        }
     };
 
     const handlePlayerSelection = (player, playerNumber) => {
@@ -706,8 +732,16 @@ const QuizSection = ({
     const evaluateAnswers = () => {
         setAnswered(true);
         const currentQuestion = quizQuestions[currentQuestionIndex];
-
-        if (player1SelectedForQuestion && player2SelectedForQuestion) {
+    
+        if (!player1SelectedForQuestion && !player2SelectedForQuestion) {
+            setWinner(null);
+        } else if (!player1SelectedForQuestion && player2SelectedForQuestion) {
+            setPlayer2Score(prev => prev + 3);
+            setWinner(player2SelectedForQuestion);
+        } else if (player1SelectedForQuestion && !player2SelectedForQuestion) {
+            setPlayer1Score(prev => prev + 3);
+            setWinner(player1SelectedForQuestion);
+        } else {
             const comparisonResult = currentQuestion.compare(player1SelectedForQuestion, player2SelectedForQuestion);
             if (comparisonResult > 0) {
                 setPlayer1Score(prev => prev + 3);
@@ -721,9 +755,21 @@ const QuizSection = ({
                 setWinner(null);
             }
         }
-
-        setTimeout(nextQuestion, 3000);
+    
+        if (currentQuestionIndex < quizQuestions.length - 1) {
+            setTimeout(() => {
+                setCurrentQuestionIndex(prev => prev + 1);
+                setAnswered(false);
+                setTimeLeft(10);
+                setPlayer1SelectedForQuestion(null);
+                setPlayer2SelectedForQuestion(null);
+                setPlayer1Confirmed(false);
+                setPlayer2Confirmed(false);
+                setWinner(null);
+            }, 3000);
+        }
     };
+    
 
     const nextQuestion = () => {
         if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -736,7 +782,10 @@ const QuizSection = ({
             setPlayer2Confirmed(false);
             setWinner(null);
         } else {
-            onComplete({ player1Score, player2Score });
+            onComplete({ 
+                player1Score: player1Score, 
+                player2Score: player2Score 
+            });
         }
     };
 
@@ -745,16 +794,25 @@ const QuizSection = ({
 
     return (
         <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="text-lg font-semibold">
-                        <span className="text-blue-900">Domanda </span>
-                        <span className="text-blue-900 font-bold text-xl">{currentQuestionIndex + 1}</span>
-                        <span className="text-blue-900"> di </span>
-                        <span className="text-blue-900 font-bold text-xl">5</span>
-                    </div>
-                    <Countdown timeLeft={timeLeft} />
-                </div>
+          {/* Sezione sticky con domanda, timer e barra avanzamento */}
+<div className="sticky top-0 z-50 bg-white shadow-md p-4">
+   
+    {/* Timer e numero domanda */}
+    <div className="flex justify-between items-center">
+        <div className="text-lg font-semibold">
+            <span className="text-blue-900">Domanda </span>
+            <span className="text-blue-900 font-bold text-xl">{currentQuestionIndex + 1}</span>
+            <span className="text-blue-900"> di </span>
+            <span className="text-blue-900 font-bold text-xl">5</span>
+        </div>
+        <Countdown timeLeft={timeLeft} />
+    </div>
+
+    {/* Domanda */}
+    <h2 className="text-2xl font-bold text-center text-blue-900 mt-3">
+        {currentQuestion.text}
+    </h2>
+
                 <div className="h-2 bg-gray-200 rounded-full">
                     <div 
                         className="h-2 bg-blue-900 rounded-full transition-all"
@@ -762,14 +820,6 @@ const QuizSection = ({
                     />
                 </div>
             </div>
-            
-            <Card className="mb-8 border border-blue-300 shadow-lg">
-                <CardContent className="p-6 flex items-center justify-center min-h-[150px]">
-                    <h2 className="text-3xl font-bold text-center text-blue-900">
-                        {currentQuestion.text}
-                    </h2>
-                </CardContent>
-            </Card>
 
                  <div className="grid md:grid-cols-2 gap-8 mb-8">
                 {/* Player 1 Card */}

@@ -706,8 +706,26 @@ const QuizSection = ({
     const evaluateAnswers = () => {
         setAnswered(true);
         const currentQuestion = quizQuestions[currentQuestionIndex];
-
-        if (player1SelectedForQuestion && player2SelectedForQuestion) {
+    
+        if (!player1SelectedForQuestion && !player2SelectedForQuestion) {
+            // Nessuno risponde → 0 punti per entrambi
+            setWinner(null);
+         } else if (!player1SelectedForQuestion) {
+            // Solo Player 2 (o Computer) risponde → vince automaticamente
+            setPlayer2Score(prev => prev + 3);
+            
+            // Se siamo in single player, il vincitore è il computer
+            if (gameMode === 'singleplayer') {
+                setWinner('Computer');
+            } else {
+                setWinner(player2SelectedForQuestion);
+            }
+        } else if (!player2SelectedForQuestion) {
+            // Solo Player 1 risponde → vince automaticamente
+            setPlayer1Score(prev => prev + 3);
+            setWinner(player1SelectedForQuestion);
+        } else {
+            // Entrambi rispondono → confronto normale
             const comparisonResult = currentQuestion.compare(player1SelectedForQuestion, player2SelectedForQuestion);
             if (comparisonResult > 0) {
                 setPlayer1Score(prev => prev + 3);
@@ -716,14 +734,16 @@ const QuizSection = ({
                 setPlayer2Score(prev => prev + 3);
                 setWinner(player2SelectedForQuestion);
             } else {
+                // Entrambi hanno risposto ma nessuno vince → 1 punto per errore
                 setPlayer1Score(prev => prev + 1);
                 setPlayer2Score(prev => prev + 1);
                 setWinner(null);
             }
         }
-
+    
         setTimeout(nextQuestion, 3000);
     };
+    
 
     const nextQuestion = () => {
         if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -745,16 +765,25 @@ const QuizSection = ({
 
     return (
         <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="text-lg font-semibold">
-                        <span className="text-blue-900">Domanda </span>
-                        <span className="text-blue-900 font-bold text-xl">{currentQuestionIndex + 1}</span>
-                        <span className="text-blue-900"> di </span>
-                        <span className="text-blue-900 font-bold text-xl">5</span>
-                    </div>
-                    <Countdown timeLeft={timeLeft} />
-                </div>
+          {/* Sezione sticky con domanda, timer e barra avanzamento */}
+<div className="sticky top-0 z-50 bg-white shadow-md p-4">
+   
+    {/* Timer e numero domanda */}
+    <div className="flex justify-between items-center">
+        <div className="text-lg font-semibold">
+            <span className="text-blue-900">Domanda </span>
+            <span className="text-blue-900 font-bold text-xl">{currentQuestionIndex + 1}</span>
+            <span className="text-blue-900"> di </span>
+            <span className="text-blue-900 font-bold text-xl">5</span>
+        </div>
+        <Countdown timeLeft={timeLeft} />
+    </div>
+
+    {/* Domanda */}
+    <h2 className="text-2xl font-bold text-center text-blue-900 mt-3">
+        {currentQuestion.text}
+    </h2>
+
                 <div className="h-2 bg-gray-200 rounded-full">
                     <div 
                         className="h-2 bg-blue-900 rounded-full transition-all"
@@ -762,14 +791,6 @@ const QuizSection = ({
                     />
                 </div>
             </div>
-            
-            <Card className="mb-8 border border-blue-300 shadow-lg">
-                <CardContent className="p-6 flex items-center justify-center min-h-[150px]">
-                    <h2 className="text-3xl font-bold text-center text-blue-900">
-                        {currentQuestion.text}
-                    </h2>
-                </CardContent>
-            </Card>
 
                  <div className="grid md:grid-cols-2 gap-8 mb-8">
                 {/* Player 1 Card */}
